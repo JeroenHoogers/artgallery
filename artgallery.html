@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+
+		<title>Art gallery JS</title>
+
+	<!--	<script src="libs/spatial_query.js"></script>-->
+		<script type="text/javascript" src="libs/kiwi.min.js"></script>
+		<script type="text/javascript" src="libs/primitives-1.0.4.js"></script>
+
+		<style>
+			canvas {
+				display: block;
+				position: absolute;
+				margin: auto;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+			}
+		</style> 
+	</head>
+	<body>
+		<script>
+		var canvas;
+		var context;
+		var width, height;
+
+		var score = 0;
+		var frames = 0;
+		var currentstate;
+		var mouse = $v([0,0]);
+
+		var states =
+		{
+			Splash: 0,
+			Menu: 1,
+			Game: 2,
+			Score: 3
+		}
+
+		var player = {
+			x: 0,
+			y: 0
+		};
+
+		var artgallery = {
+			polygon: $p([
+				[200, 100], 
+				[700, 130], 
+				[1000, 250], 
+				[900, 585],
+				[830, 605], 
+				[700, 350], 
+				[500, 620], 
+				[470, 530], 
+				[100, 650], 
+				[140, 230]]),
+			update: function(){
+
+			},
+			draw: function(ctx)
+			{
+				ctx.fillStyle = '#ddd';
+				ctx.beginPath();
+
+				//ctx.moveTo(200, 100);
+				this.polygon.foreach(function(vertex){
+					ctx.lineTo(vertex.x, vertex.y);
+				});
+				//ctx.lineTo(700, 130);
+				//ctx.lineTo(1000, 250);
+				//ctx.lineTo(900, 585);
+				//ctx.lineTo(830, 605);
+				//ctx.lineTo(700, 350);
+				//ctx.lineTo(500, 620);
+				//ctx.lineTo(470, 530);
+				//ctx.lineTo(100, 650);
+				//ctx.lineTo(140, 230);
+				ctx.closePath();
+				ctx.fill();
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = '#999';
+				ctx.stroke();
+			}
+		};
+
+		var patrol = {
+			path: [],
+			guards: [
+				$v([830,550]), 
+				$v([500,300])
+			],
+			update: function(){
+
+			},
+			draw: function(ctx)
+			{
+				for (var i = 0; i < this.guards.length; i++) {
+					ctx.save();
+					ctx.translate(this.guards[i].x(), this.guards[i].y());
+				
+					ctx.beginPath();
+					ctx.arc(0, 0, 10, 0, 2 * Math.PI, false);
+					ctx.fillStyle = '#875697';
+					ctx.fill();
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = '#003300';
+					//ctx.stroke();
+
+					ctx.restore();
+				};
+			}
+		};
+
+		function main() {
+			canvas = document.createElement("canvas");
+
+			width = window.innerWidth;
+			height = window.innerHeight;
+
+			// Desktop
+			if(width >= 1280)
+			{
+				canvas.style.border = "1px solid #000";
+
+				width = 1280;
+				height = 720;
+			}
+
+			canvas.width = width;
+			canvas.height = height;
+
+			canvas.addEventListener("mousemove", onMouseMove); 
+
+			if(canvas.getContext)
+			{
+				context = canvas.getContext("2d");
+
+				// Start the game loop
+				run();
+			}
+
+			document.body.appendChild(canvas);			
+		}
+
+		function onMouseMove(event)
+		{
+			var rect = canvas.getBoundingClientRect();
+
+			mouse = $v([event.clientX - rect.left, 
+				event.clientY - rect.top]);
+		}
+
+		function drawPolygon(polygon, ctx)
+		{
+			ctx.beginPath();
+
+			//ctx.moveTo(200, 100);
+			polygon.foreach(function(vertex){
+				ctx.lineTo(vertex.x, vertex.y);
+			});
+
+			ctx.closePath();
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = '#999';
+			ctx.stroke();
+		}
+
+		/*
+		 * The game loop
+		 */
+		function run() 
+		{
+			var loop = function()
+			{
+				update();
+				render();
+				window.requestAnimationFrame(loop, canvas);
+			}
+
+			window.requestAnimationFrame(loop, canvas);
+		}
+
+		/*
+		 * The game update function
+		 */
+		function update()
+		{
+			frames++;
+		}
+
+		/*
+		 * The game render function
+		 */
+		function render() 
+		{
+			// Draw background color
+			context.fillStyle = "#D8E17C";
+			context.fillRect(0, 0, width, height);
+			
+			// Draw artgallery
+			artgallery.draw(context);
+
+			// Draw guards
+			patrol.draw(context);
+
+			// Draw visibility 
+			for (var i = 0; i < patrol.guards.length; i++) {
+				context.beginPath();
+				context.moveTo(patrol.guards[i].x(), patrol.guards[i].y());
+				context.lineTo(mouse.x(), mouse.y());
+
+				context.lineWidth = 1;
+				context.strokeStyle = '#999';
+				context.stroke();
+
+				context.moveTo(100, 200);
+				context.lineTo(200, 400);
+				context.stroke();
+
+				//console.log("bla");
+				//var intersect_polygon = $p([patrol.guards[i]],[mouse.x, mouse.y()],[mouse.x+1, mouse.y+1]);
+				//console.log("bla1");
+				var intersections = artgallery.polygon.intersects_2d($p([100,200],[200,400],[300,400]));
+				//console.log("bla2");
+
+				if(intersections != null)
+				{
+					//console.log("bla3");
+					ctx.save();
+					ctx.translate(this.guards[i].x(), this.guards[i].y());
+				
+					ctx.beginPath();
+					ctx.arc(0, 0, 10, 0, 2 * Math.PI, false);
+					ctx.fillStyle = '#875697';
+					ctx.fill();
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = '#003300';
+
+					ctx.restore();
+				}
+
+
+			};
+		}
+
+		// run the game
+		main();
+		</script>
+	</body>
+</html>
+
+
