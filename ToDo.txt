@@ -1,0 +1,7 @@
+ - Visibility algo
+ - Walking player
+ 	- Collision
+ - Paintings
+ - Stationary guards
+ - Caught event
+ - Escape
