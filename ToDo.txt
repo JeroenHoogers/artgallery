@@ -1,8 +1,0 @@
- - Line segments + intersections
- - Visibility algo
- - Stationary guards
- - Walking player
- 	- Collision
- - Caught event
- - Paintings
- - Escape
