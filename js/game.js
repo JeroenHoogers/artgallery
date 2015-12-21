@@ -3,7 +3,7 @@ var renderer = PIXI.autoDetectRenderer(1280, 720);
 document.body.appendChild(renderer.view);
 
 //create a texture
-var texture = PIXI.Texture.fromImage("assets/textures/cat.jpg");
+var texture = PIXI.Texture.fromImage("assets/textures/bunny.png");
 var tilingSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
 stage.addChild(tilingSprite);
 
