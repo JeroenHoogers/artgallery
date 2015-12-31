@@ -1,0 +1,4 @@
+function drawVisibility(x, y)
+{
+    
+}
