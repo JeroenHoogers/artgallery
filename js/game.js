@@ -19,9 +19,8 @@ var gallery = [
 			new PIXI.Point(500,620),
 			new PIXI.Point(470,530),
 			new PIXI.Point(100,650),
-			new PIXI.Point(140,230),
-
-		])//,
+			new PIXI.Point(140,230)
+		]),
 		// // Holes
 		// new PIXI.Polygon([
 		// 	new PIXI.Point(290,250),
@@ -94,7 +93,7 @@ var triangleGraphics = new PIXI.Graphics();
 stage.addChild(triangleGraphics);
 //mask the texture with the polygon
 tilingSprite.mask = graphics;
-//drawVisibility(guards[0].x, guards[0].y);
+drawVisibility(guards[0].x, guards[0].y);
 
 stage.interactive = true;
 stage.buttonMode = true;
@@ -106,15 +105,12 @@ update();
 
 function update()
 {   
-
     requestAnimationFrame( update );
     renderer.render(stage);
 }
 
 function mouseEventHandler(event)
 {
-	
-	console.log(event);
 	if(event.type == "mousedown")
 		mousedown = true;
 	else if(event.type =="mouseup")
@@ -132,39 +128,48 @@ function mouseEventHandler(event)
 
 function drawVisibility(x, y)
 {
-	
 	triangleGraphics.lineStyle(1, 0xFFFFFF);
 
     var endpoints = [];
-    for (var i = 0;  i < gallery[0].points.length; i+=2) {
-    	var endpoint = {};
-    	endpoint.x = gallery[0].points[i];
-		endpoint.y = gallery[0].points[i+1];
-		var dir = { 
-			x: endpoint.x - x, 
-			y: endpoint.y - y
-		};
-		var len = gallery[0].points.length;
-		var e1 = {
-    		x: gallery[0].points[(len + i-2) % len],
-    		y: gallery[0].points[(len + i-1) % len]
-    	}
-    	var e2 = {
-    		x: gallery[0].points[i+2 % len],
-    		y: gallery[0].points[i+3 % len]
-    	}
 
-		endpoint.angle = Math.atan2(dir.y, dir.x);
-		endpoint.polygon = 0;
-		endpoint.index = i;
-		endpoint.neighbour1 = e1; 
-		endpoint.neighbour2 = e2;
+    for (var p = 0; p < gallery.length; p++) {
+	    for (var i = 0;  i < gallery[p].points.length; i+=2) {
+	    	var endpoint = {};
+	    	endpoint.x = gallery[p].points[i];
+			endpoint.y = gallery[p].points[i+1];
+			var dir = { 
+				x: endpoint.x - x, 
+				y: endpoint.y - y
+			};
+			var len = gallery[p].points.length;
+			var e1 = {
+	    		x: gallery[p].points[(len + i-2) % len],
+	    		y: gallery[p].points[(len + i-1) % len]
+	    	}
+	    	var e2 = {
+	    		x: gallery[p].points[(i+2) % len],
+	    		y: gallery[p].points[(i+3) % len]
+	    	}
+	    	// normalisation (optimal)
+	    	var vectorLength = Math.sqrt(Math.pow(dir.x,2) + Math.pow(dir.y, 2));
+	    	dir.x /= vectorLength;
+	    	dir.y /= vectorLength;
 
-    	endpoints.push(endpoint);
-    }
+			endpoint.angle = Math.atan2(dir.y, dir.x);
+			endpoint.polygon = p;
+			endpoint.index = i;
+			endpoint.neighbour1 = e1; 
+			endpoint.neighbour2 = e2;
+
+	    	endpoints.push(endpoint);
+	    }
+    };
 
     endpoints.sort(function(a,b){return a.angle - b.angle});
-    //endpoints.reverse();
+
+    // TODO: added the first 2 points twice for continuity
+    endpoints.push(endpoints[0]);
+    endpoints.push(endpoints[1]);
     console.debug(endpoints);
 
     var status = [];
@@ -214,48 +219,62 @@ function drawVisibility(x, y)
     	for (var j = status.length - 1; j >= 0; j--) 
     	{
     		var hit = status[j].intersects(ray);
-
-    		// calculate the distance from the oigin to this wall
+    		console.log(hit.result);
+    		// calculate the distance from the origin to this wall
     		status[j].dist = Math.sqrt(Math.pow(x - hit.x, 2) + Math.pow(y - hit.y, 2));
+
+    		// TODO: there shouldnt be any walls in the status that are not intersecting the sweepline
+    		if(!hit.result)
+    		{
+    			status.splice(j,1);
+
+    		}
     	};
 
     	status.sort(function(a,b){ return a.dist - b.dist});
 
     	// Debug draws
-    	if(status.length > 0)
+    	/*if(status.length > 0)
     	{
 	     	var hit = status[0].intersects(ray);
-	     	triangleGraphics.lineStyle(2, 0x000000, 1-i*0.1);
+	     	triangleGraphics.lineStyle(2*i, 0x000000, 1);
 	     	triangleGraphics.moveTo(x,y);
 	     	triangleGraphics.lineTo(p.x,p.y);
 			triangleGraphics.lineStyle(1, 0xff0000, 1);
 			triangleGraphics.moveTo(x,y);
 			triangleGraphics.lineTo(hit.x, hit.y);
-		}
+		}*/
 
 
     	// Check whether the nearest wall has changed, if so construct a visibility triangle
     	if(typeof nearestwall != 'undefined' && status.length > 0 && !nearestwall.equals(status[0]))
     	{
-    		var ray = new Ray(x, y, p.x, p.y);
-    		var hit = nearestwall.intersects(ray);
+    		var ray1 = new Ray(x, y, p.x, p.y);
+    		var hit1 = nearestwall.intersects(ray1);
+    		
+     		triangleGraphics.lineStyle(1, 0x000000, 1);
+	     	triangleGraphics.moveTo(x,y);
+	     	triangleGraphics.lineTo(p.x,p.y);
     		
     		if (typeof lastVertex != 'undefined')
     		{
+    			var ray2 = new Ray(x, y, lastVertex.x, lastVertex.y);
+    			var hit2 = nearestwall.intersects(ray2);
 	    		var triangle = new PIXI.Polygon([
 					new PIXI.Point(x, y),
-					new PIXI.Point(lastVertex.x, lastVertex.y),
-					new PIXI.Point(hit.x,hit.y)
+					new PIXI.Point(hit1.x, hit1.y),
+					new PIXI.Point(hit2.x, hit2.y)
 				]);
-	    		triangleGraphics.lineStyle(1, 0xFFFF00, 1);
+	    		triangleGraphics.lineStyle(0, 0xFFFF00, 1);
 				triangleGraphics.beginFill(0, 0.3);
 				triangleGraphics.drawPolygon(triangle);
 				triangleGraphics.endFill();
 			}
-
 			// Save the new vertex
 			lastVertex = p;
+
     	}
+
     };
     
 }
