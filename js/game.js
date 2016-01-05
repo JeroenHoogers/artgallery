@@ -4,8 +4,15 @@ document.body.appendChild(renderer.view);
 
 //create a texture
 var texture = PIXI.Texture.fromImage("assets/textures/wood.jpg");
+var alertedTexture = PIXI.Texture.fromImage("assets/textures/mgs.png");
+
+
 var tilingSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
 stage.addChild(tilingSprite);
+
+var alertedSprite = new PIXI.Sprite(alertedTexture);
+stage.addChild(alertedSprite);
+var visionColor = 0x000000;
 
 var gallery = [
 		// Gallery polygon
@@ -46,6 +53,7 @@ var paintings = [
 	}
 ];
 
+var visibilityPolygon;
 
 var guards = [
 	new PIXI.Point(500,250),
@@ -70,7 +78,6 @@ for (var i = gallery.length - 1; i >= 1; i--) {
 	galleryGraphics.lineStyle(10, 0xFFFFFF, 1);
 	galleryGraphics.drawPolygon(gallery[i].points);
 };
-
 stage.addChild(galleryGraphics);
 
 
@@ -94,13 +101,15 @@ stage.addChild(paintings);
 */
 
 var starttime = null;
+var alerted = false;
+
 
 var guardGraphics = new PIXI.Graphics();
 guardGraphics.lineStyle(1, 0x000000, 1);
 guardGraphics.beginFill(0xff0000);
 for (var i = guards.length - 1; i >= 0; i--) {
 	guardGraphics.drawCircle(guards[i].x, guards[i].y, 10);
-	console.log("guard " + i + " in gallery: " + gallery[0].contains(guards[i].x, guards[i].y));
+	//console.log("guard " + i + " in gallery: " + gallery[0].contains(guards[i].x, guards[i].y));
 };
 guardGraphics.endFill();
 
@@ -129,6 +138,9 @@ function update()
    //triangleGraphics.clear();
     //drawVisibility(guards[0].x, guards[0].y, step);
 
+    alertedSprite.x = guards[0].x;
+    alertedSprite.y = guards[0].y - 40;
+
     renderer.render(stage);
 }
 
@@ -138,18 +150,37 @@ function mouseEventHandler(event)
 		mousedown = true;
 	else if(event.type =="mouseup")
 		mousedown = false;
-
+	
+	var position = event.data.global;
+	
+	triangleGraphics.clear();
 	if(mousedown)
 	{
-		triangleGraphics.clear();
-		var position = event.data.global;
 		guards[0].x = position.x;
 		guards[0].y = position.y;
-		drawVisibility(guards[0].x, guards[0].y, 0);
+		
 		//drawVisibility(position.x, position.y, endpoints.length);
 	}
 
+	if(visibilityPolygon.contains(position.x, position.y))
+	{
+		//console.log("inside");
+		visionColor = 0x770000;
+		alerted = true;
+
+		
+	}
+	else{
+		//console.log("not inside");
+		visionColor = 0x000000;
+		alerted = false;
+	}
+
+	drawVisibility(guards[0].x, guards[0].y, 0);
+
+	alertedSprite.visible = alerted;
 }
+
 
 function drawVisibility(x, y, stopat)
 {
@@ -175,6 +206,7 @@ function drawVisibility(x, y, stopat)
 	    		x: gallery[p].points[(i+2) % len],
 	    		y: gallery[p].points[(i+3) % len]
 	    	}
+
 	    	// normalisation (optimal)
 	    	//var vectorLength = Math.sqrt(Math.pow(dir.x,2) + Math.pow(dir.y, 2));
 	    	//dir.x /= vectorLength;
@@ -203,59 +235,10 @@ function drawVisibility(x, y, stopat)
 	// var ray = new Ray(x, y, endpoints[0].x, endpoints[0].y);
 
 
-	// // Add the first walls intersecting with the sweepline
- //    for (var i = 0; i < gallery.length; i++) {
- //    	for (var j = 0; j < gallery[i].points.length; j+=2) {
- //    		var len = gallery[i].points.length;
- //    		var wall = new LineSegment(
- //    			gallery[i].points[(len + j-2) % len], 
- //    			gallery[i].points[(len + j-1) % len], 
- //    			gallery[i].points[j], 
- //    			gallery[i].points[j+1]);
-
- //    		var hit = wall.intersects(ray);
- //    		if(hit.result && hit.x != 'undefined')
- //    		{
- //    			// //console.debug(wall);
-	// 	     // 	triangleGraphics.lineStyle(2, 0x00ff00, 1);
-	// 	     // 	triangleGraphics.moveTo(wall.x1, wall.y1);
-	// 	     // 	triangleGraphics.lineTo(wall.x2, wall.y2);
-
-	// 	     // 	triangleGraphics.moveTo(ray.x1, ray.y1);
-	// 	     // 	triangleGraphics.lineTo(hit.x, hit.y);
-
- //    			wall.dist = Math.sqrt(Math.pow(x - hit.x, 2) + Math.pow(y - hit.y, 2));
-
-	// 			status.push(wall);
- //    		}
- //    	};
- //    };
-
-	// // TODO: Create this function in another location since we have to reuse it
-	// status.sort(function(a,b)
-	// {
-	// 	var diff = a.dist - b.dist;
-	// 	if(diff > 0) return 1;
-	// 	if(diff < 0) return -1;
-	// 	if(diff == 0)
-	// 	{
-	// 		// Check which line is closer by taking a point slightly further on the line
-	// 		var p1 = a.interpolate(p.x, p.y, 0.01);
-	// 		var p2 = b.interpolate(p.x, p.y, 0.01);
-
-	// 		var dist1 = Math.sqrt(Math.pow(x - p1.x, 2) + Math.pow(y - p1.y, 2));
-	// 		var dist2 = Math.sqrt(Math.pow(x - p2.x, 2) + Math.pow(y - p2.y, 2));
-
-	// 		if(dist1 > dist2) return 1;
-	// 		if(dist1 < dist2) return -1;
-	// 	}
-
-	// 	return 0;
-	// });
-
-	console.debug(status);
-	for (var pass = 0; pass < 2; pass++) {
-		console.debug(status.length);
+	var visPoints = [];
+	for (var pass = 0; pass < 2; pass++) 
+	{
+		//console.debug(status.length);
 	    for (var i = 0; i < endpoints.length; i++) 
 	    {
 	    	var p = endpoints[i];
@@ -264,7 +247,7 @@ function drawVisibility(x, y, stopat)
 
 	    	if(i+1== stopat)
 	    	{
-	    		console.debug(status.length);
+	    		//console.debug(status.length);
 		 		triangleGraphics.lineStyle(3, 0x0000ff, 1);
 		 		triangleGraphics.moveTo(nearestwall.x1, nearestwall.y1);
 		 		triangleGraphics.lineTo(nearestwall.x2, nearestwall.y2);
@@ -278,7 +261,8 @@ function drawVisibility(x, y, stopat)
 		 	}
 
 			var neighbours = [p.neighbour1, p.neighbour2];
-			console.log(p.angle);
+			//console.log(p.angle);
+
 			// Add walls if p is the first endpoint of this wall
 	    	for (var j = 0; j < neighbours.length; j++)
 	    	{
@@ -292,10 +276,10 @@ function drawVisibility(x, y, stopat)
 				
 
 				var difference = Math.atan2(dir.y, dir.x) + Math.PI - p.angle;
-				console.log("Add : ? " + difference);
+				//console.log("Add : ? " + difference);
 				if(difference < -Math.PI || difference > 0)
 				{
-					console.log("wall added");
+					//console.log("wall added");
 		    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
 					status.push(wall);
 				}
@@ -314,11 +298,11 @@ function drawVisibility(x, y, stopat)
 					};
 
 					var difference = Math.atan2(dir.y, dir.x) + Math.PI - p.angle;
-					console.log("Remove : ? " + difference);
+					//console.log("Remove : ? " + difference);
 					if(difference >= -Math.PI && difference <= 0)
 					{
 		    			// remove this wall from the array
-						console.log("wall removed");
+					//	console.log("wall removed");
 		    			status.splice(j, 1);
 		    		}
 	    		}
@@ -387,9 +371,9 @@ function drawVisibility(x, y, stopat)
 		    		var ray1 = new Ray(x, y, p.x, p.y);
 		    		var hit1 = nearestwall.intersects(ray1);
 		    		
-		     		triangleGraphics.lineStyle(1, 0x000000, 1);
-			     	triangleGraphics.moveTo(x,y);
-			     	triangleGraphics.lineTo(p.x, p.y);
+		     		// triangleGraphics.lineStyle(1, 0x000000, 1);
+			     	// triangleGraphics.moveTo(x,y);
+			     	// triangleGraphics.lineTo(p.x, p.y);
 		    		
 		    		if (typeof lastVertex != 'undefined')
 		    		{
@@ -400,8 +384,14 @@ function drawVisibility(x, y, stopat)
 							new PIXI.Point(hit1.x, hit1.y),
 							new PIXI.Point(hit2.x, hit2.y)
 						]);
+
+			    		
+						visPoints.push(new PIXI.Point(hit2.x, hit2.y));
+						visPoints.push(new PIXI.Point(hit1.x, hit1.y));
+
+
 			    		triangleGraphics.lineStyle(0, 0xFFFF00, 1);
-						triangleGraphics.beginFill(0, 0.3);
+						triangleGraphics.beginFill(visionColor, 0.3);
 						triangleGraphics.drawPolygon(triangle);
 						triangleGraphics.endFill();
 					}
@@ -411,4 +401,12 @@ function drawVisibility(x, y, stopat)
 	    	}
 	    };
     };
+
+    visibilityPolygon = new PIXI.Polygon(visPoints);
+
+    //triangleGraphics.lineStyle(1, 0xFFFF00, 1);
+	//triangleGraphics.beginFill(0x0000ff, 0.5);
+	//triangleGraphics.drawPolygon(visibilityPolygon);
+	//triangleGraphics.endFill();
+
 }
