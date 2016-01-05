@@ -54,6 +54,21 @@ LineSegment.prototype.other = function (x, y)
     return point;
 };
 
+/**
+ * Used to interpolate along the linesegment
+ *
+ * @return true if the given point is an endpoint, false otherwise
+ */
+LineSegment.prototype.interpolate = function (sx,sy,f)
+{
+    if(sx == this.x2 && sy == this.y2)
+        f = 1.0 - f;
+
+    return new Point(
+        this.x1*(1-f) + this.x2*f,
+        this.y1*(1-f) + this.y2*f
+    );
+};
 
 /**
  * Checks whether the given ray intersects this linesegment
@@ -87,9 +102,12 @@ LineSegment.prototype.intersects = function (ray)
             output.result = true;
         }
 
+        if(output.result === true)
+            output.result = ray.isPointOnRay(output.x, output.y);
+
     }
 
-    return output;
+    return output;   
 };
 
 //module.exports = LineSegment;
