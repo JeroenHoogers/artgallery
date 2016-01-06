@@ -11,7 +11,8 @@ var tilingSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
 stage.addChild(tilingSprite);
 
 var alertedSprite = new PIXI.Sprite(alertedTexture);
-stage.addChild(alertedSprite);
+alertedSprite.visible = false;
+
 var visionColor = 0x000000;
 
 var gallery = [
@@ -75,14 +76,14 @@ for (var i = gallery.length - 1; i >= 1; i--) {
 	galleryGraphics.beginFill(0xCCCCCC);
 	galleryGraphics.drawPolygon(gallery[i].points);
 	galleryGraphics.endFill();
-	galleryGraphics.lineStyle(10, 0xFFFFFF, 1);
+	galleryGraphics.lineStyle(5, 0xFFFFFF, 1);
 	galleryGraphics.drawPolygon(gallery[i].points);
 };
 stage.addChild(galleryGraphics);
 
 
 var walls = new PIXI.Graphics();
-
+walls.lineStyle(5, 0xFFFFFF, 1);
 walls.drawPolygon(gallery[0].points);
 stage.addChild(walls);
 /*
@@ -118,6 +119,8 @@ var triangleGraphics = new PIXI.Graphics();
 stage.addChild(triangleGraphics);
 //mask the texture with the polygon
 tilingSprite.mask = graphics;
+
+stage.addChild(alertedSprite);
 
 drawVisibility(guards[0].x, guards[0].y, 0);
 
@@ -165,7 +168,7 @@ function mouseEventHandler(event)
 	if(visibilityPolygon.contains(position.x, position.y))
 	{
 		//console.log("inside");
-		visionColor = 0x770000;
+		visionColor = 0xCCCCCC;
 		alerted = true;
 
 		
@@ -391,7 +394,7 @@ function drawVisibility(x, y, stopat)
 
 
 			    		triangleGraphics.lineStyle(0, 0xFFFF00, 1);
-						triangleGraphics.beginFill(visionColor, 0.3);
+						triangleGraphics.beginFill(visionColor, 0.5);
 						triangleGraphics.drawPolygon(triangle);
 						triangleGraphics.endFill();
 					}
