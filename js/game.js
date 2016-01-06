@@ -37,10 +37,26 @@ var gallery = [
 			new PIXI.Point(300,420)]
 		),
 		new PIXI.Polygon([
-			new PIXI.Point(600,200),
-			new PIXI.Point(690,290),
-			new PIXI.Point(570,340)]
+			new PIXI.Point(570,200),
+			new PIXI.Point(680,260),
+			new PIXI.Point(530,340)]
+		),
+		new PIXI.Polygon([
+			new PIXI.Point(800,250),
+			new PIXI.Point(840,310),
+			new PIXI.Point(770,340),
+			new PIXI.Point(690,310)]
 		)
+];
+
+var guardpath = [
+	new PIXI.Point(500,250),
+	new PIXI.Point(350,150),
+	new PIXI.Point(250,150),
+	new PIXI.Point(700,140),
+	new PIXI.Point(820,190),
+	new PIXI.Point(700,140),
+	new PIXI.Point(500,150)
 ];
 
 var paintings = [
@@ -57,10 +73,12 @@ var paintings = [
 var visibilityPolygon;
 
 var guards = [
-	new PIXI.Point(500,250),
-	new PIXI.Point(630,300)
+	new PIXI.Point(500,300)
 ];
 
+var player = new PIXI.Point(900,500);
+var moveplayerx = 0;
+var moveplayery = 0;
 //create graphics
 var graphics = new PIXI.Graphics();
 graphics.beginFill(0);
@@ -129,21 +147,74 @@ stage.buttonMode = true;
 stage.on("mousemove", mouseEventHandler);
 stage.on("mousedown", mouseEventHandler);
 stage.on("mouseup", mouseEventHandler);
+var left = keyboard(37),
+    up = keyboard(38),
+    right = keyboard(39),
+    down = keyboard(40);
 
+var currentpathindex = 0;
+var lastframe;
+var playerspeed = 0.4;
+var guardspeed = 0.5;
 update();
 
 function update()
 {   
+	console.debug(currentpathindex)
 	if(!starttime) starttime = Date.now();
+	if(!lastframe) lastframe = Date.now();
     requestAnimationFrame( update );
     //setTimeout(timer(guards[0].x, guards[0].y, 1), 1000);
-    var step = parseInt((Date.now() - starttime) / 200);
+    var step = parseInt((Date.now() - starttime) / 800);
+    var deltatime = Date.now() - lastframe;
+    console.log(deltatime);
+   	triangleGraphics.clear();
+	guardGraphics.clear();
+
+	if(visibilityPolygon.contains(player.x, player.y))
+	{
+		//console.log("inside");
+		visionColor = 0xFF0000;
+		alerted = true;
+		
+	}
+	else{
+		//console.log("not inside");
+		visionColor = 0x000000;
+		alerted = false;
+	}
+	if(!alerted)
+	{
+		if(guards[0].x < guardpath[currentpathindex].x - guardspeed * deltatime)
+			guards[0].x = guards[0].x + guardspeed * deltatime;
+		else if(guards[0].x > guardpath[currentpathindex].x + guardspeed * deltatime)
+			guards[0].x = guards[0].x - guardspeed * deltatime;
+		else
+			guards[0].x = guardpath[currentpathindex].x;
+		if(guards[0].y < guardpath[currentpathindex].y)
+			guards[0].y = guards[0].y + guardspeed * deltatime;
+		else if(guards[0].y > guardpath[currentpathindex].y + guardspeed * deltatime)
+			guards[0].y = guards[0].y - guardspeed * deltatime;
+		else
+			guards[0].y = guardpath[currentpathindex].y;
+		if(guards[0].x == guardpath[currentpathindex].x && guards[0].y == guardpath[currentpathindex].y)
+			currentpathindex = (currentpathindex + 1) % (guardpath.length);
+	}
+	player.x += moveplayerx * playerspeed * deltatime;
+	player.y += moveplayery * playerspeed * deltatime;
+	guardGraphics.lineStyle(1, 0x000000, 1);
+	guardGraphics.beginFill(0x0000ff);
+	guardGraphics.drawCircle(player.x, player.y, 10);
+	guardGraphics.endFill();
+
+	alertedSprite.visible = alerted;
+    drawVisibility(guards[0].x, guards[0].y, step);
+    lastframe = Date.now();
    //triangleGraphics.clear();
     //drawVisibility(guards[0].x, guards[0].y, step);
 
     alertedSprite.x = guards[0].x;
     alertedSprite.y = guards[0].y - 40;
-
     renderer.render(stage);
 }
 
@@ -159,34 +230,117 @@ function mouseEventHandler(event)
 	triangleGraphics.clear();
 	if(mousedown)
 	{
+		//triangleGraphics.clear();
+		//guardGraphics.clear();
+		var position = event.data.global;
 		guards[0].x = position.x;
 		guards[0].y = position.y;
+
+		//drawVisibility(guards[0].x, guards[0].y, 0);
 		
 		//drawVisibility(position.x, position.y, endpoints.length);
 	}
 
-	if(visibilityPolygon.contains(position.x, position.y))
-	{
-		//console.log("inside");
-		visionColor = 0xCCCCCC;
-		alerted = true;
-
-		
-	}
-	else{
-		//console.log("not inside");
-		visionColor = 0x000000;
-		alerted = false;
-	}
-
 	drawVisibility(guards[0].x, guards[0].y, 0);
+}
 
-	alertedSprite.visible = alerted;
+function keyboard(keyCode) {
+  var key = {};
+  key.code = keyCode;
+  key.isDown = false;
+  key.isUp = true;
+  key.press = undefined;
+  key.release = undefined;
+  //The `downHandler`
+  key.downHandler = function(event) {
+    if (event.keyCode === key.code) {
+      if (key.isUp && key.press) key.press();
+      key.isDown = true;
+      key.isUp = false;
+    }
+    event.preventDefault();
+  };
+
+  //The `upHandler`
+  key.upHandler = function(event) {
+    if (event.keyCode === key.code) {
+      if (key.isDown && key.release) key.release();
+      key.isDown = false;
+      key.isUp = true;
+    }
+    event.preventDefault();
+  };
+
+  //Attach event listeners
+  window.addEventListener(
+    "keydown", key.downHandler.bind(key), false
+  );
+  window.addEventListener(
+    "keyup", key.upHandler.bind(key), false
+  );
+  return key;
 }
 
 
+  //Left arrow key `press` method
+  left.press = function() {
+
+    //Change the cat's velocity when the key is pressed
+    moveplayerx = -1;
+    moveplayery = 0;
+  };
+
+  //Left arrow key `release` method
+  left.release = function() {
+
+    //If the left arrow has been released, and the right arrow isn't down,
+    //and the cat isn't moving vertically:
+    //Stop the cat
+    if (!right.isDown && moveplayery === 0) {
+      moveplayerx = 0;
+    }
+  };
+
+  //Up
+  up.press = function() {
+    moveplayery = -1;
+    moveplayerx = 0;
+  };
+  up.release = function() {
+    if (!down.isDown && moveplayerx === 0) {
+      moveplayery = 0;
+    }
+  };
+
+  //Right
+  right.press = function() {
+    moveplayerx = 1;
+    moveplayery = 0;
+  };
+  right.release = function() {
+    if (!left.isDown && moveplayery === 0) {
+      moveplayerx = 0;
+    }
+  };
+
+  //Down
+  down.press = function() {
+    moveplayery = 1;
+    moveplayerx = 0;
+  };
+  down.release = function() {
+    if (!up.isDown && moveplayerx === 0) {
+      moveplayery = 0;
+    }
+  };
+
 function drawVisibility(x, y, stopat)
 {
+
+	guardGraphics.lineStyle(1, 0x000000, 1);
+	guardGraphics.beginFill(0xff0000);
+	guardGraphics.drawCircle(x, y, 10);
+	guardGraphics.endFill();
 	triangleGraphics.lineStyle(1, 0xFFFFFF);
 
     var endpoints = [];
@@ -247,21 +401,6 @@ function drawVisibility(x, y, stopat)
 	    	var p = endpoints[i];
 
 	    	var nearestwall = status[0];
-
-	    	if(i+1== stopat)
-	    	{
-	    		//console.debug(status.length);
-		 		triangleGraphics.lineStyle(3, 0x0000ff, 1);
-		 		triangleGraphics.moveTo(nearestwall.x1, nearestwall.y1);
-		 		triangleGraphics.lineTo(nearestwall.x2, nearestwall.y2);
-
-		 		for (var s = 1; s < status.length; s++) {
-					triangleGraphics.lineStyle(3, 0x00ffff, 1);
-					triangleGraphics.moveTo(status[s].x1, status[s].y1);
-					triangleGraphics.lineTo(status[s].x2, status[s].y2);
-
-		 		};
-		 	}
 
 			var neighbours = [p.neighbour1, p.neighbour2];
 			//console.log(p.angle);
