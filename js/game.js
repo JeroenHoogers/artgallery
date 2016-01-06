@@ -200,8 +200,28 @@ function update()
 		if(guards[0].x == guardpath[currentpathindex].x && guards[0].y == guardpath[currentpathindex].y)
 			currentpathindex = (currentpathindex + 1) % (guardpath.length);
 	}
-	player.x += parseInt(moveplayerx * playerspeed * deltatime);
-	player.y += parseInt(moveplayery * playerspeed * deltatime);
+	var nextPosition = new PIXI.Point(
+			parseInt( player.x  + (moveplayerx * playerspeed * deltatime)), 
+			parseInt( player.y + (moveplayery * playerspeed * deltatime)));
+
+
+	if(gallery[0].contains(nextPosition.x, nextPosition.y))
+	{
+		var insideHole = false;
+		for (var i = 1; i < gallery.length; i++) 
+		{
+			if( gallery[i].contains(nextPosition.x, nextPosition.y))
+			{
+				insideHole = true;
+				break;
+			}
+		};
+		if(!insideHole)
+		{
+			player.x = nextPosition.x;
+			player.y = nextPosition.y;
+		}
+	}
 	guardGraphics.lineStyle(1, 0x000000, 1);
 	guardGraphics.beginFill(0x0000ff);
 	guardGraphics.drawCircle(player.x, player.y, 10);
