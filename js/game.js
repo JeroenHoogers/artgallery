@@ -154,20 +154,20 @@ var left = keyboard(37),
 
 var currentpathindex = 0;
 var lastframe;
-var playerspeed = 0.4;
-var guardspeed = 0.5;
+var playerspeed = 400;
+var guardspeed = 200;
 update();
 
 function update()
 {   
-	console.debug(currentpathindex)
+	//console.debug(currentpathindex)
 	if(!starttime) starttime = Date.now();
 	if(!lastframe) lastframe = Date.now();
     requestAnimationFrame( update );
     //setTimeout(timer(guards[0].x, guards[0].y, 1), 1000);
     var step = parseInt((Date.now() - starttime) / 800);
-    var deltatime = Date.now() - lastframe;
-    console.log(deltatime);
+    var deltatime = (Date.now() - lastframe) / 1000;
+    //console.log(deltatime);
    	triangleGraphics.clear();
 	guardGraphics.clear();
 
@@ -186,22 +186,22 @@ function update()
 	if(!alerted)
 	{
 		if(guards[0].x < guardpath[currentpathindex].x - guardspeed * deltatime)
-			guards[0].x = guards[0].x + guardspeed * deltatime;
+			guards[0].x = parseInt(guards[0].x + guardspeed * deltatime);
 		else if(guards[0].x > guardpath[currentpathindex].x + guardspeed * deltatime)
-			guards[0].x = guards[0].x - guardspeed * deltatime;
+			guards[0].x = parseInt(guards[0].x - guardspeed * deltatime);
 		else
 			guards[0].x = guardpath[currentpathindex].x;
 		if(guards[0].y < guardpath[currentpathindex].y)
-			guards[0].y = guards[0].y + guardspeed * deltatime;
+			guards[0].y = parseInt(guards[0].y + guardspeed * deltatime);
 		else if(guards[0].y > guardpath[currentpathindex].y + guardspeed * deltatime)
-			guards[0].y = guards[0].y - guardspeed * deltatime;
+			guards[0].y = parseInt(guards[0].y - guardspeed * deltatime);
 		else
 			guards[0].y = guardpath[currentpathindex].y;
 		if(guards[0].x == guardpath[currentpathindex].x && guards[0].y == guardpath[currentpathindex].y)
 			currentpathindex = (currentpathindex + 1) % (guardpath.length);
 	}
-	player.x += moveplayerx * playerspeed * deltatime;
-	player.y += moveplayery * playerspeed * deltatime;
+	player.x += parseInt(moveplayerx * playerspeed * deltatime);
+	player.y += parseInt(moveplayery * playerspeed * deltatime);
 	guardGraphics.lineStyle(1, 0x000000, 1);
 	guardGraphics.beginFill(0x0000ff);
 	guardGraphics.drawCircle(player.x, player.y, 10);
