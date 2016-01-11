@@ -154,8 +154,8 @@ var left = keyboard(37),
 
 var currentpathindex = 0;
 var lastframe;
-var playerspeed = 400;
-var guardspeed = 200;
+var playerspeed = 200;
+var guardspeed = 120;
 update();
 
 function update()
@@ -183,7 +183,7 @@ function update()
 		visionColor = 0x000000;
 		alerted = false;
 	}
-	if(!alerted)
+	if(!alerted && false)
 	{
 		if(guards[0].x < guardpath[currentpathindex].x - guardspeed * deltatime)
 			guards[0].x = parseInt(guards[0].x + guardspeed * deltatime);
@@ -229,12 +229,15 @@ function update()
 
 	alertedSprite.visible = alerted;
     drawVisibility(guards[0].x, guards[0].y, step);
-    lastframe = Date.now();
-   //triangleGraphics.clear();
+    
+   	//triangleGraphics.clear();
     //drawVisibility(guards[0].x, guards[0].y, step);
 
     alertedSprite.x = guards[0].x;
     alertedSprite.y = guards[0].y - 40;
+
+    // save current time to calculate the deltatime next frame
+    lastframe = Date.now();
     renderer.render(stage);
 }
 
@@ -416,7 +419,8 @@ function drawVisibility(x, y, stopat)
 	for (var pass = 0; pass < 2; pass++) 
 	{
 		//console.debug(status.length);
-	    for (var i = 0; i < endpoints.length; i++) 
+		var steps = (pass > 0) ? stopat : endpoints.length;
+	    for (var i = 0; i < steps; i++) 
 	    {
 	    	var p = endpoints[i];
 
@@ -515,14 +519,14 @@ function drawVisibility(x, y, stopat)
 	  //    	triangleGraphics.lineTo(p.x,p.y);
 
 	    	// Debug draws
-	  //   	if(status.length > 0)
-	  //   	{
-		 //     	var hit = status[0].intersects(ray);
+	    	if(status.length > 0 && pass == 1)
+	    	{
+		     	var hit = status[0].intersects(ray);
 
-			// 	triangleGraphics.lineStyle(1, 0xff0000, 1);
-			// 	triangleGraphics.moveTo(x,y);
-			// 	triangleGraphics.lineTo(hit.x, hit.y);
-			// }
+				triangleGraphics.lineStyle(1, 0xff0000, 1);
+				triangleGraphics.moveTo(x,y);
+				triangleGraphics.lineTo(hit.x, hit.y);
+			}
 
 
 	    	// Check whether the nearest wall has changed, if so construct a visibility triangle
@@ -533,9 +537,9 @@ function drawVisibility(x, y, stopat)
 		    		var ray1 = new Ray(x, y, p.x, p.y);
 		    		var hit1 = nearestwall.intersects(ray1);
 		    		
-		     		// triangleGraphics.lineStyle(1, 0x000000, 1);
-			     	// triangleGraphics.moveTo(x,y);
-			     	// triangleGraphics.lineTo(p.x, p.y);
+		     		triangleGraphics.lineStyle(1, 0x000000, 1);
+			     	triangleGraphics.moveTo(x,y);
+			     	triangleGraphics.lineTo(p.x, p.y);
 		    		
 		    		if (typeof lastVertex != 'undefined')
 		    		{
