@@ -15,6 +15,9 @@ alertedSprite.visible = false;
 
 var visionColor = 0x000000;
 
+// Enable/Disable debugging
+var debug = false;
+
 var gallery = [
 		// Gallery polygon
 		new PIXI.Polygon([
@@ -183,7 +186,7 @@ function update()
 		visionColor = 0x000000;
 		alerted = false;
 	}
-	if(!alerted && false)
+	if(!alerted && !debug)
 	{
 		if(guards[0].x < guardpath[currentpathindex].x - guardspeed * deltatime)
 			guards[0].x = parseInt(guards[0].x + guardspeed * deltatime);
@@ -359,7 +362,6 @@ function keyboard(keyCode) {
 
 function drawVisibility(x, y, stopat)
 {
-
 	guardGraphics.lineStyle(1, 0x000000, 1);
 	guardGraphics.beginFill(0xff0000);
 	guardGraphics.drawCircle(x, y, 10);
@@ -421,7 +423,7 @@ function drawVisibility(x, y, stopat)
 	for (var pass = 0; pass < 2; pass++) 
 	{
 		//console.debug(status.length);
-		var steps = (pass > 0) ? stopat : endpoints.length;
+		var steps = (pass > 0 && debug) ? stopat : endpoints.length;
 	    for (var i = 0; i < steps; i++) 
 	    {
 	    	var p = endpoints[i];
@@ -429,8 +431,6 @@ function drawVisibility(x, y, stopat)
 	    	var nearestwall = status[0];
 
 			var neighbours = [p.neighbour1, p.neighbour2];
-			console.log(p.angle);
-
 
 			// Add walls if p is the first endpoint of this wall
 	    	for (var j = 0; j < neighbours.length; j++)
@@ -534,7 +534,7 @@ function drawVisibility(x, y, stopat)
 	  //    	triangleGraphics.lineTo(p.x,p.y);
 
 	    	// Debug draws
-	    	if(status.length > 0 && pass == 1)
+	    	if(status.length > 0 && pass == 1 && debug)
 	    	{
 		     	var hit = status[0].intersects(ray);
 
@@ -572,9 +572,13 @@ function drawVisibility(x, y, stopat)
 		    		var ray1 = new Ray(x, y, p.x, p.y);
 		    		var hit1 = nearestwall.intersects(ray1);
 		    		
-		     		triangleGraphics.lineStyle(1, 0x000000, 1);
-			     	triangleGraphics.moveTo(x,y);
-			     	triangleGraphics.lineTo(p.x, p.y);
+		    		// DEBUG lines
+		    		if(debug)
+		    		{
+			     		triangleGraphics.lineStyle(1, 0x000000, 1);
+				     	triangleGraphics.moveTo(x,y);
+				     	triangleGraphics.lineTo(p.x, p.y);
+				    }
 		    		
 		    		if (typeof lastVertex != 'undefined')
 		    		{
