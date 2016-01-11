@@ -165,7 +165,7 @@ function update()
 	if(!lastframe) lastframe = Date.now();
     requestAnimationFrame( update );
     //setTimeout(timer(guards[0].x, guards[0].y, 1), 1000);
-    var step = parseInt((Date.now() - starttime) / 800);
+    var step = parseInt((Date.now() - starttime) / 2000);
     var deltatime = (Date.now() - lastframe) / 1000;
     //console.log(deltatime);
    	triangleGraphics.clear();
@@ -368,6 +368,7 @@ function drawVisibility(x, y, stopat)
 
     var endpoints = [];
 
+    // Initialize event structure
     for (var p = 0; p < gallery.length; p++) {
 	    for (var i = 0;  i < gallery[p].points.length; i+=2) {
 	    	var endpoint = {};
@@ -415,6 +416,7 @@ function drawVisibility(x, y, stopat)
 	// var ray = new Ray(x, y, endpoints[0].x, endpoints[0].y);
 
 
+	if(stopat > endpoints.length) stopat = endpoints.length;
 	var visPoints = [];
 	for (var pass = 0; pass < 2; pass++) 
 	{
@@ -427,26 +429,45 @@ function drawVisibility(x, y, stopat)
 	    	var nearestwall = status[0];
 
 			var neighbours = [p.neighbour1, p.neighbour2];
-			//console.log(p.angle);
+			console.log(p.angle);
+
 
 			// Add walls if p is the first endpoint of this wall
 	    	for (var j = 0; j < neighbours.length; j++)
 	    	{
+
 	    		var n = neighbours[j];
 				var dir = { 
 					x: n.x - x, 
 					y: n.y - y
 				};
 
-				// check whether 
-				
+				var exists = false;
+				// check whether the wall is already in the status structure
+	    		for (var z = status.length - 1; z >= 0; z--) 
+	    		{
+	    			exists = status[z].isendpoint(p.x, p.y);
+	    			if(exists)
+	    				break;
+	    		}
 
-				var difference = Math.atan2(dir.y, dir.x) + Math.PI - p.angle;
+				//var difference = Math.atan2(dir.y, dir.x) - p.angle;
+				var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
 				//console.log("Add : ? " + difference);
-				if(difference < -Math.PI || difference > 0)
+				//if(difference < -Math.PI || difference > 0)
+				if((neighbourangle < Math.PI && p.angle > Math.PI && neighbourangle + Math.PI * 2 > p.angle && neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
+					(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
 				{
 					//console.log("wall added");
+					//if(exists)
+					//	console.log("wall added twice");
+
 		    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
+		    		if(!exists)
+		    		{
+		    			wall.age = 0;
+		    						
+					}
 					status.push(wall);
 				}
 
@@ -455,22 +476,23 @@ function drawVisibility(x, y, stopat)
 			// Remove walls with p as second endpoint
 	    	for (var j = status.length - 1; j >= 0; j--) 
 	    	{
-	    		if(status[j].isendpoint(p.x, p.y))
+	    		if(status[j].isendpoint(p.x, p.y) && status[j].age > 0)
 	    		{
-	    			var otherend = status[j].other(p.x, p.y);
-					var dir = { 
-						x: otherend.x - x, 
-						y: otherend.y - y
-					};
+	    			
+	    // 			var otherend = status[j].other(p.x, p.y);
+					// var dir = { 
+					// 	x: otherend.x - x, 
+					// 	y: otherend.y - y
+					// };
 
-					var difference = Math.atan2(dir.y, dir.x) + Math.PI - p.angle;
+					//var difference = Math.atan2(dir.y, dir.x) + Math.PI - p.angle;
 					//console.log("Remove : ? " + difference);
-					if(difference >= -Math.PI && difference <= 0)
-					{
+					//if(difference >= -Math.PI && difference <= 0)
+					//{
 		    			// remove this wall from the array
-					//	console.log("wall removed");
+						//console.log("wall removed");
 		    			status.splice(j, 1);
-		    		}
+		    		//}
 	    		}
 	    	};
 
@@ -483,13 +505,6 @@ function drawVisibility(x, y, stopat)
 	    		var hit = status[j].intersects(ray);
 	    		// calculate the distance from the origin to this wall
 	    		status[j].dist = Math.sqrt(Math.pow(x - hit.x, 2) + Math.pow(y - hit.y, 2));
-
-	    		// TODO: there shouldnt be any walls in the status that are not intersecting the sweepline
-	    		if(!hit.result)
-	    		{
-	    			// Remove wall from the status
-	    			status.splice(j,1);
-	    		}
 	    	};
 
 	    	// TODO: Create this function in another location since we have to reuse it
@@ -526,8 +541,28 @@ function drawVisibility(x, y, stopat)
 				triangleGraphics.lineStyle(1, 0xff0000, 1);
 				triangleGraphics.moveTo(x,y);
 				triangleGraphics.lineTo(hit.x, hit.y);
+
+
+				if(nearestwall != "undefined" && i == stopat - 1)
+				{
+					for (var z = 0; z < status.length; z++) {
+						if(status[z].age > 0)
+							triangleGraphics.lineStyle(6, 0x00ff00, 1);
+						else
+							triangleGraphics.lineStyle(6, 0xff0000, 1);
+						triangleGraphics.moveTo(status[z].x1, status[z].y1);
+						triangleGraphics.lineTo(status[z].x2, status[z].y2);			
+					}
+
+					triangleGraphics.lineStyle(3, 0x0000ff, 1);
+					triangleGraphics.moveTo(nearestwall.x1, nearestwall.y1);
+					triangleGraphics.lineTo(nearestwall.x2, nearestwall.y2);
+				}
 			}
 
+			for (var j = 0; j < status.length; j++) {
+				status[j].age = 1;
+			};
 
 	    	// Check whether the nearest wall has changed, if so construct a visibility triangle
 	    	if(typeof nearestwall != 'undefined' && status.length > 0 && !nearestwall.equals(status[0]))
