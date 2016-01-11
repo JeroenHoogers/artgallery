@@ -7,8 +7,9 @@ var texture = PIXI.Texture.fromImage("assets/textures/wood.jpg");
 var alertedTexture = PIXI.Texture.fromImage("assets/textures/mgs.png");
 
 
-var tilingSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
-stage.addChild(tilingSprite);
+var floorShadowSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
+var floorSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
+stage.addChild(floorShadowSprite);
 
 var alertedSprite = new PIXI.Sprite(alertedTexture);
 alertedSprite.visible = false;
@@ -82,15 +83,27 @@ var guards = [
 var player = new PIXI.Point(900,500);
 var moveplayerx = 0;
 var moveplayery = 0;
+
 //create graphics
-var graphics = new PIXI.Graphics();
-graphics.beginFill(0);
-graphics.drawPolygon(gallery[0].points);
-graphics.endFill();
+var galleryMask = new PIXI.Graphics();
+galleryMask.beginFill(0);
+galleryMask.drawPolygon(gallery[0].points);
+galleryMask.endFill();
+
+var visibilityMask = new PIXI.Graphics();
+stage.addChild(visibilityMask);
+
+var shadowGraphics = new PIXI.Graphics();
+shadowGraphics.beginFill(0x000000, 0.3);
+shadowGraphics.drawPolygon(gallery[0].points);
+shadowGraphics.endFill();
 
 var mousedown = false;
 
-stage.addChild(graphics);
+
+stage.addChild(shadowGraphics);
+stage.addChild(galleryMask);
+stage.addChild(floorSprite);
 
 var galleryGraphics = new PIXI.Graphics();
 for (var i = gallery.length - 1; i >= 1; i--) {
@@ -101,7 +114,6 @@ for (var i = gallery.length - 1; i >= 1; i--) {
 	galleryGraphics.drawPolygon(gallery[i].points);
 };
 stage.addChild(galleryGraphics);
-
 
 var walls = new PIXI.Graphics();
 walls.lineStyle(5, 0xFFFFFF, 1);
@@ -118,38 +130,42 @@ paintings.lineTo(400,105);
 paintings.lineTo(400,110);
 paintings.endFill();
 
-
 stage.addChild(paintings);
 */
 
 var starttime = null;
 var alerted = false;
 
-
 var guardGraphics = new PIXI.Graphics();
 guardGraphics.lineStyle(1, 0x000000, 1);
 guardGraphics.beginFill(0xff0000);
+
+// Draw guards
 for (var i = guards.length - 1; i >= 0; i--) {
 	guardGraphics.drawCircle(guards[i].x, guards[i].y, 10);
-	//console.log("guard " + i + " in gallery: " + gallery[0].contains(guards[i].x, guards[i].y));
 };
+
 guardGraphics.endFill();
 
 stage.addChild(guardGraphics);
+
 var triangleGraphics = new PIXI.Graphics();
 stage.addChild(triangleGraphics);
+
 //mask the texture with the polygon
-tilingSprite.mask = graphics;
+floorShadowSprite.mask = galleryMask;
 
 stage.addChild(alertedSprite);
 
 drawVisibility(guards[0].x, guards[0].y, 0);
+floorSprite.mask = visibilityMask;
 
 stage.interactive = true;
 stage.buttonMode = true;
 stage.on("mousemove", mouseEventHandler);
 stage.on("mousedown", mouseEventHandler);
 stage.on("mouseup", mouseEventHandler);
+
 var left = keyboard(37),
     up = keyboard(38),
     right = keyboard(39),
@@ -159,33 +175,33 @@ var currentpathindex = 0;
 var lastframe;
 var playerspeed = 200;
 var guardspeed = 120;
+
 update();
 
 function update()
 {   
-	//console.debug(currentpathindex)
 	if(!starttime) starttime = Date.now();
 	if(!lastframe) lastframe = Date.now();
     requestAnimationFrame( update );
-    //setTimeout(timer(guards[0].x, guards[0].y, 1), 1000);
+
     var step = parseInt((Date.now() - starttime) / 2000);
     var deltatime = (Date.now() - lastframe) / 1000;
-    //console.log(deltatime);
+
    	triangleGraphics.clear();
 	guardGraphics.clear();
 
 	if(visibilityPolygon.contains(player.x, player.y))
 	{
-		//console.log("inside");
 		visionColor = 0xFF0000;
 		alerted = true;
 		
 	}
-	else{
-		//console.log("not inside");
+	else
+	{
 		visionColor = 0x000000;
 		alerted = false;
 	}
+
 	if(!alerted && !debug)
 	{
 		if(guards[0].x < guardpath[currentpathindex].x - guardspeed * deltatime)
@@ -203,10 +219,10 @@ function update()
 		if(guards[0].x == guardpath[currentpathindex].x && guards[0].y == guardpath[currentpathindex].y)
 			currentpathindex = (currentpathindex + 1) % (guardpath.length);
 	}
+
 	var nextPosition = new PIXI.Point(
 			parseInt( player.x  + (moveplayerx * playerspeed * deltatime)), 
 			parseInt( player.y + (moveplayery * playerspeed * deltatime)));
-
 
 	if(gallery[0].contains(nextPosition.x, nextPosition.y))
 	{
@@ -232,6 +248,7 @@ function update()
 
 	alertedSprite.visible = alerted;
     drawVisibility(guards[0].x, guards[0].y, step);
+    
     
    	//triangleGraphics.clear();
     //drawVisibility(guards[0].x, guards[0].y, step);
@@ -270,7 +287,8 @@ function mouseEventHandler(event)
 	drawVisibility(guards[0].x, guards[0].y, 0);
 }
 
-function keyboard(keyCode) {
+function keyboard(keyCode) 
+{
   var key = {};
   key.code = keyCode;
   key.isDown = false;
@@ -278,7 +296,8 @@ function keyboard(keyCode) {
   key.press = undefined;
   key.release = undefined;
   //The `downHandler`
-  key.downHandler = function(event) {
+  key.downHandler = function(event) 
+  {
     if (event.keyCode === key.code) {
       if (key.isUp && key.press) key.press();
       key.isDown = true;
@@ -288,7 +307,8 @@ function keyboard(keyCode) {
   };
 
   //The `upHandler`
-  key.upHandler = function(event) {
+  key.upHandler = function(event) 
+  {
     if (event.keyCode === key.code) {
       if (key.isDown && key.release) key.release();
       key.isDown = false;
@@ -309,16 +329,16 @@ function keyboard(keyCode) {
 
 
   //Left arrow key `press` method
-  left.press = function() {
-
+  left.press = function() 
+  {
     //Change the cat's velocity when the key is pressed
     moveplayerx = -1;
     moveplayery = 0;
   };
 
   //Left arrow key `release` method
-  left.release = function() {
-
+  left.release = function() 
+  {
     //If the left arrow has been released, and the right arrow isn't down,
     //and the cat isn't moving vertically:
     //Stop the cat
@@ -328,33 +348,41 @@ function keyboard(keyCode) {
   };
 
   //Up
-  up.press = function() {
+  up.press = function() 
+  {
     moveplayery = -1;
     moveplayerx = 0;
   };
-  up.release = function() {
+  
+  up.release = function() 
+  {
     if (!down.isDown && moveplayerx === 0) {
       moveplayery = 0;
     }
   };
 
   //Right
-  right.press = function() {
+  right.press = function() 
+  {
     moveplayerx = 1;
     moveplayery = 0;
   };
-  right.release = function() {
+  right.release = function() 
+  {
     if (!left.isDown && moveplayery === 0) {
       moveplayerx = 0;
     }
   };
 
   //Down
-  down.press = function() {
+  down.press = function() 
+  {
     moveplayery = 1;
     moveplayerx = 0;
   };
-  down.release = function() {
+
+  down.release = function() 
+  {
     if (!up.isDown && moveplayerx === 0) {
       moveplayery = 0;
     }
@@ -595,10 +623,10 @@ function drawVisibility(x, y, stopat)
 						visPoints.push(new PIXI.Point(hit1.x, hit1.y));
 
 
-			    		triangleGraphics.lineStyle(0, 0xFFFF00, 1);
-						triangleGraphics.beginFill(visionColor, 0.5);
-						triangleGraphics.drawPolygon(triangle);
-						triangleGraphics.endFill();
+			   //  		triangleGraphics.lineStyle(0, 0xFFFF00, 1);
+						// triangleGraphics.beginFill(visionColor, 0.5);
+						// triangleGraphics.drawPolygon(triangle);
+						// triangleGraphics.endFill();
 					}
 				}
 		    	// Save the new vertex
@@ -609,9 +637,10 @@ function drawVisibility(x, y, stopat)
 
     visibilityPolygon = new PIXI.Polygon(visPoints);
 
-    //triangleGraphics.lineStyle(1, 0xFFFF00, 1);
-	//triangleGraphics.beginFill(0x0000ff, 0.5);
-	//triangleGraphics.drawPolygon(visibilityPolygon);
-	//triangleGraphics.endFill();
+    visibilityMask.clear();
+	visibilityMask.lineStyle(0, 0xFFFF00, 1);
+	visibilityMask.beginFill(0x000000, 0);
+	visibilityMask.drawPolygon(visibilityPolygon);
+	visibilityMask.endFill();
 
 }
