@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+
+		<title>Art gallery JS</title>
+
+		<script type="text/javascript" src="libs/pixi.js"></script>
+<script src="pixi.draggable.js"></script>
+		<script type="text/javascript" src="js/util/Point.js"></script>
+		<script type="text/javascript" src="js/util/LineSegment.js"></script>
+		<script type="text/javascript" src="js/util/Ray.js"></script>
+
+		<style>
+			canvas {
+				display: block;
+				position: absolute;
+				margin: auto;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+			}
+			input {
+				padding: 10px;
+				margin: 3px;
+				width: 200px;
+			}
+		</style> 
+	</head>
+	<body style="background:#ccc">
+		<script type="text/javascript" src="js/leveleditor.js"></script>
+		<input type="button" id="btn_gallery" onclick="CreateScene(1);" value="Create Gallery"> <br> <br>
+		<input type="button" id="btn_Holes" onclick="CreateScene(2);" value="Add Hole"> <br> <br>
+		<input type="button" id="btn_Guards" onclick="CreateScene(3);" value="Create Guards"> <br> <br>
+		<input type="button" id="btn_Guardpath" onclick="CreateScene(4);" value="Create Guard path"> <br> <br>
+		<input type="button" id="btn_Player" onclick="CreateScene(5);" value="Create Player">
+	</body>
+</html>
+
+
