@@ -22,14 +22,14 @@ var debug = false;
 var gallery = [
 		// Gallery polygon
 		new PIXI.Polygon([
-			new PIXI.Point(200,100),
-			new PIXI.Point(700,100),
-			new PIXI.Point(1000,250),
-			new PIXI.Point(900,585),
+			new PIXI.Point(50,20),
+			new PIXI.Point(700,140),
+			new PIXI.Point(1200,150),
+			new PIXI.Point(1000,585),
 			new PIXI.Point(830,605),
 			new PIXI.Point(700,350),
-			new PIXI.Point(500,620),
-			new PIXI.Point(470,530),
+			new PIXI.Point(500,600),
+			new PIXI.Point(470,540),
 			new PIXI.Point(100,650),
 			new PIXI.Point(140,230)
 		]),
@@ -46,10 +46,10 @@ var gallery = [
 			new PIXI.Point(530,340)]
 		),
 		new PIXI.Polygon([
-			new PIXI.Point(800,250),
-			new PIXI.Point(840,310),
-			new PIXI.Point(770,340),
-			new PIXI.Point(690,310)]
+			new PIXI.Point(850,250),
+			new PIXI.Point(940,310),
+			new PIXI.Point(780,340),
+			new PIXI.Point(750,310)]
 		)
 ];
 
@@ -77,7 +77,8 @@ var paintings = [
 var visibilityPolygon;
 
 var guards = [
-	new PIXI.Point(500,300)
+	new PIXI.Point(500,300),
+	new PIXI.Point(700,300)
 ];
 
 var player = new PIXI.Point(900,500);
@@ -184,23 +185,16 @@ function update()
 	if(!lastframe) lastframe = Date.now();
     requestAnimationFrame( update );
 
-    var step = parseInt((Date.now() - starttime) / 2000);
+    var step = parseInt((Date.now() - starttime) / 1000);
     var deltatime = (Date.now() - lastframe) / 1000;
 
    	triangleGraphics.clear();
 	guardGraphics.clear();
 
 	if(visibilityPolygon.contains(player.x, player.y))
-	{
-		visionColor = 0xFF0000;
 		alerted = true;
-		
-	}
 	else
-	{
-		visionColor = 0x000000;
 		alerted = false;
-	}
 
 	if(!alerted && !debug)
 	{
@@ -247,7 +241,9 @@ function update()
 	guardGraphics.endFill();
 
 	alertedSprite.visible = alerted;
-    drawVisibility(guards[0].x, guards[0].y, step);
+	for (var i = guards.length - 1; i >= 0; i--) {
+	    drawVisibility(guards[i].x, guards[i].y, step);
+	}
     
     
    	//triangleGraphics.clear();
@@ -561,6 +557,8 @@ function drawVisibility(x, y, stopat)
 	  //    	triangleGraphics.moveTo(x,y);
 	  //    	triangleGraphics.lineTo(p.x,p.y);
 
+
+
 	    	// Debug draws
 	    	if(status.length > 0 && pass == 1 && debug)
 	    	{
@@ -569,6 +567,12 @@ function drawVisibility(x, y, stopat)
 				triangleGraphics.lineStyle(1, 0xff0000, 1);
 				triangleGraphics.moveTo(x,y);
 				triangleGraphics.lineTo(hit.x, hit.y);
+
+
+		     	triangleGraphics.lineStyle(1, 0xFFFF00, 1);
+				triangleGraphics.beginFill(0x000000, 1);
+				triangleGraphics.drawCircle(p.x, p.y, 5);
+				triangleGraphics.endFill();
 
 
 				if(nearestwall != "undefined" && i == stopat - 1)
@@ -618,15 +622,17 @@ function drawVisibility(x, y, stopat)
 							new PIXI.Point(hit2.x, hit2.y)
 						]);
 
-			    		
 						visPoints.push(new PIXI.Point(hit2.x, hit2.y));
 						visPoints.push(new PIXI.Point(hit1.x, hit1.y));
 
-
-			   //  		triangleGraphics.lineStyle(0, 0xFFFF00, 1);
-						// triangleGraphics.beginFill(visionColor, 0.5);
-						// triangleGraphics.drawPolygon(triangle);
-						// triangleGraphics.endFill();
+						// Draw debug triangles
+						if(debug)
+						{
+				    		triangleGraphics.lineStyle(1, 0xFFFF00, 1);
+							triangleGraphics.beginFill(0x0000ff, 0.5);
+							triangleGraphics.drawPolygon(triangle);
+							triangleGraphics.endFill();
+						}
 					}
 				}
 		    	// Save the new vertex
@@ -641,6 +647,7 @@ function drawVisibility(x, y, stopat)
 	visibilityMask.lineStyle(0, 0xFFFF00, 1);
 	visibilityMask.beginFill(0x000000, 0);
 	visibilityMask.drawPolygon(visibilityPolygon);
+	visibilityMask.drawCircle(820, 450, 40);
 	visibilityMask.endFill();
 
 }
