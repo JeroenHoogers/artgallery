@@ -194,6 +194,10 @@ function CreateScene(scene)
 			break;
 	}
 }
+function Export()
+{
+	tb_Export.value = JSON.stringify(level);
+}
 
 var pointarray = [];
 var pointselected = -1;
@@ -202,7 +206,14 @@ var guardselected = -1;
 function mouseEventHandler(event)
 {
 	var position = event.data.global;
-
+	if (position.x < 0)
+		position.x = 0;
+	if (position.y < 0)
+		position.y = 0;
+	if (position.x > 1280)
+		position.x = 1280;
+	if (position.y > 720)
+		position.y = 720;
 	if(event.type == "mousedown")
 	{
 		//Check whether a gallery point is selected
@@ -266,7 +277,7 @@ function mouseEventHandler(event)
 			pointarray.push(Math.floor(position.x),Math.floor(position.y));
 		}
 
-		if(createguards && guardselected < 0) //Create new Guard
+		if(createguards && guardselected < 0 && level.gallery.contains(position.x, position.y)) //Create new Guard
 		{
 			level.guards.push({position: new PIXI.Point(Math.floor(position.x), Math.floor(position.y))});
 		}
@@ -279,6 +290,7 @@ function mouseEventHandler(event)
 	}
 	else if(event.type =="mouseup")
 	{
+		console.log("up : " + position.x + "h : " + position.y);
 		pointselected = -1;
 		guardselected = -1;
 		mousedown = false;
@@ -286,6 +298,25 @@ function mouseEventHandler(event)
 	
 	if(mousedown)
 	{
+		if(creategallery)
+		{
+			console.log("check");
+			for (var i = 0; i < level.gallery.points.length; i+=2) {
+				console.log("check22");
+				if(pointselected < 0 && i >= pointarray.length - 2)
+					break;
+				if (level.gallery.points[i] <= position.x + 20 && level.gallery.points[i] >= position.x - 20 && i != pointselected)
+				{
+					console.log("xaxis");
+					position.x = level.gallery.points[i];
+				}
+				if (level.gallery.points[i+1] <= position.y + 20 && level.gallery.points[i+1] >= position.y - 20 && i != pointselected)
+				{
+					console.log("yaxis");
+					position.y = level.gallery.points[i+1];
+				}
+			};
+		}
 		if(pointselected < 0) //Selected point OR last point
 		{
 			var len = pointarray.length;
@@ -309,12 +340,18 @@ function mouseEventHandler(event)
 		else if(newHole && holeselected >= 0){ // change current hole point position
 			level.holes[holeselected] = new PIXI.Polygon(pointarray);
 		}
-		else if(guardselected >= 0){ //Change current guard position
+		else if(guardselected >= 0 && level.gallery.contains(position.x, position.y)){ //Change current guard position
 			level.guards[guardselected].position.x = Math.floor(position.x);
 			level.guards[guardselected].position.y = Math.floor(position.y);
 		}
-		else if(createplayer){ //Change player position
-			level.player = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
+		else if(createplayer && level.gallery.contains(position.x, position.y)){ //Change player position
+			var candraw = true;
+			for (var i = 0; i < level.holes.length; i++) {
+				if (level.holes[i].contains(position.x, position.y))
+					candraw = false;
+			};
+			if(candraw)
+				level.player = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
 		}
 
 		//Clear all graphics

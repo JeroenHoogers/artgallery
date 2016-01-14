@@ -10,7 +10,6 @@
 		<title>Art gallery JS</title>
 
 		<script type="text/javascript" src="libs/pixi.js"></script>
-<script src="pixi.draggable.js"></script>
 		<script type="text/javascript" src="js/util/Point.js"></script>
 		<script type="text/javascript" src="js/util/LineSegment.js"></script>
 		<script type="text/javascript" src="js/util/Ray.js"></script>
@@ -24,6 +23,7 @@
 				bottom: 0;
 				left: 0;
 				right: 0;
+				border: 2px solid #000;
 			}
 			input {
 				padding: 10px;
@@ -38,7 +38,9 @@
 		<input type="button" id="btn_Holes" onclick="CreateScene(2);" value="Add Hole"> <br> <br>
 		<input type="button" id="btn_Guards" onclick="CreateScene(3);" value="Create Guards"> <br> <br>
 		<input type="button" id="btn_Guardpath" onclick="CreateScene(4);" value="Create Guard path"> <br> <br>
-		<input type="button" id="btn_Player" onclick="CreateScene(5);" value="Create Player">
+		<input type="button" id="btn_Player" onclick="CreateScene(5);" value="Create Player"> <br> <br>
+		<input type="button" id="btn_Export" onclick="Export();" value="Export"> <br> <br>
+		<input type="textbox" id="tb_Export" onclick="Export();">
 	</body>
 </html>
 
