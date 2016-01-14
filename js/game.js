@@ -1,17 +1,30 @@
 var stage = new PIXI.Container();
 var renderer = PIXI.autoDetectRenderer(1280, 720,{backgroundColor : 0xCCCCCC});
+renderer.forceFXAA = true;
 document.body.appendChild(renderer.view);
 
 //create a texture
-var texture = PIXI.Texture.fromImage("assets/textures/wood.jpg");
+var texture = PIXI.Texture.fromImage("assets/textures/woodl.jpg");
 var alertedTexture = PIXI.Texture.fromImage("assets/textures/mgs.png");
+var lightTexture = PIXI.Texture.fromImage("assets/textures/light.png");
 
-
-var floorShadowSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
+//var floorShadowSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
 var floorSprite = new PIXI.extras.TilingSprite(texture, 1280, 720);
-stage.addChild(floorShadowSprite);
+
+var shadowMask = new PIXI.RenderTexture(renderer, 1280, 720);
+
+var shadowMaskGraphics = new PIXI.Graphics();
+//shadowMaskGraphics.blendMode = PIXI.BLEND_MODES.EXCLUSION;
+var shadowMaskSprite = new PIXI.Sprite(shadowMask);
+
+
+//stage.addChild(shadowMaskGraphics);
+
 
 var alertedSprite = new PIXI.Sprite(alertedTexture);
+alertedSprite.anchor.x = 0.5;
+alertedSprite.anchor.y = 0.5;
+
 alertedSprite.visible = false;
 
 var visionColor = 0x000000;
@@ -41,11 +54,6 @@ var gallery = [
 			new PIXI.Point(300,420)]
 		),
 		new PIXI.Polygon([
-			new PIXI.Point(570,200),
-			new PIXI.Point(680,260),
-			new PIXI.Point(530,340)]
-		),
-		new PIXI.Polygon([
 			new PIXI.Point(850,250),
 			new PIXI.Point(940,310),
 			new PIXI.Point(780,340),
@@ -63,6 +71,15 @@ var guardpath = [
 	new PIXI.Point(500,150)
 ];
 
+var obstacles = [
+	new PIXI.Polygon([
+		new PIXI.Point(570,200),
+		new PIXI.Point(680,260),
+		new PIXI.Point(530,340)]
+	)
+	];
+
+
 var paintings = [
 	{
 		pos: new PIXI.Point(400,100),
@@ -77,9 +94,10 @@ var paintings = [
 var visibilityPolygon;
 
 var guards = [
-	new PIXI.Point(500,300),
-	new PIXI.Point(700,300)
+	{position: new PIXI.Point(500,300)},
+	{position: new PIXI.Point(960,300)}
 ];
+
 
 var player = new PIXI.Point(900,500);
 var moveplayerx = 0;
@@ -98,22 +116,31 @@ var shadowGraphics = new PIXI.Graphics();
 shadowGraphics.beginFill(0x000000, 0.3);
 shadowGraphics.drawPolygon(gallery[0].points);
 shadowGraphics.endFill();
+shadowGraphics.mask = shadowMaskSprite;
 
 var mousedown = false;
 
+var obstacleGraphics = new PIXI.Graphics();
+for (var i = 0; i < obstacles.length; i++) {
+	obstacleGraphics.beginFill(0xffff44);
+	obstacleGraphics.drawPolygon(obstacles[i].points);
+	obstacleGraphics.endFill();
+}
 
-stage.addChild(shadowGraphics);
 stage.addChild(galleryMask);
 stage.addChild(floorSprite);
+stage.addChild(obstacleGraphics);
+// Add shadow
+stage.addChild(shadowGraphics);
 
 var galleryGraphics = new PIXI.Graphics();
-for (var i = gallery.length - 1; i >= 1; i--) {
+for (var i = 1; i < gallery.length; i++)  {
 	galleryGraphics.beginFill(0xCCCCCC);
 	galleryGraphics.drawPolygon(gallery[i].points);
 	galleryGraphics.endFill();
 	galleryGraphics.lineStyle(5, 0xFFFFFF, 1);
 	galleryGraphics.drawPolygon(gallery[i].points);
-};
+}
 stage.addChild(galleryGraphics);
 
 var walls = new PIXI.Graphics();
@@ -133,6 +160,13 @@ paintings.endFill();
 
 stage.addChild(paintings);
 */
+
+var lightGraphics = new PIXI.Graphics();
+lightGraphics.beginFill(0xFFFFFF, 0.3);
+lightGraphics.drawPolygon(gallery[0].points);
+lightGraphics.endFill();
+
+//stage.addChild(lightGraphics);
 
 var starttime = null;
 var alerted = false;
@@ -154,12 +188,19 @@ var triangleGraphics = new PIXI.Graphics();
 stage.addChild(triangleGraphics);
 
 //mask the texture with the polygon
-floorShadowSprite.mask = galleryMask;
 
+floorSprite.mask = galleryMask;
+//lightGraphics.mask = visibilityMask;
 stage.addChild(alertedSprite);
 
+stage.addChild(shadowMaskSprite);
+//shadowMaskSprite
+//stage.addChild(shadowMaskGraphics);
+
+
+//shadowGraphics.mask = shadowMaskSprite;
+
 drawVisibility(guards[0].x, guards[0].y, 0);
-floorSprite.mask = visibilityMask;
 
 stage.interactive = true;
 stage.buttonMode = true;
@@ -177,6 +218,8 @@ var lastframe;
 var playerspeed = 200;
 var guardspeed = 120;
 
+
+
 update();
 
 function update()
@@ -191,26 +234,31 @@ function update()
    	triangleGraphics.clear();
 	guardGraphics.clear();
 
-	if(visibilityPolygon.contains(player.x, player.y))
-		alerted = true;
-	else
-		alerted = false;
+	alerted = false;
+	// Check whether the player can be seen by any of the guards
+	for (var g = 0; g < guards.length; g++) {
+		if(typeof(guards[g].visibility) != "undefined" && guards[g].visibility.contains(player.x, player.y))
+		{	
+			alerted = true;
+			break;
+		}
+	};
 
 	if(!alerted && !debug)
 	{
-		if(guards[0].x < guardpath[currentpathindex].x - guardspeed * deltatime)
-			guards[0].x = parseInt(guards[0].x + guardspeed * deltatime);
-		else if(guards[0].x > guardpath[currentpathindex].x + guardspeed * deltatime)
-			guards[0].x = parseInt(guards[0].x - guardspeed * deltatime);
+		if(guards[0].position.x < guardpath[currentpathindex].x - guardspeed * deltatime)
+			guards[0].position.x = parseInt(guards[0].position.x + guardspeed * deltatime);
+		else if(guards[0].position.x > guardpath[currentpathindex].x + guardspeed * deltatime)
+			guards[0].position.x = parseInt(guards[0].position.x - guardspeed * deltatime);
 		else
-			guards[0].x = guardpath[currentpathindex].x;
-		if(guards[0].y < guardpath[currentpathindex].y)
-			guards[0].y = parseInt(guards[0].y + guardspeed * deltatime);
-		else if(guards[0].y > guardpath[currentpathindex].y + guardspeed * deltatime)
-			guards[0].y = parseInt(guards[0].y - guardspeed * deltatime);
+			guards[0].position.x = guardpath[currentpathindex].x;
+		if(guards[0].position.y < guardpath[currentpathindex].y)
+			guards[0].position.y = parseInt(guards[0].position.y + guardspeed * deltatime);
+		else if(guards[0].position.y > guardpath[currentpathindex].y + guardspeed * deltatime)
+			guards[0].position.y = parseInt(guards[0].position.y - guardspeed * deltatime);
 		else
-			guards[0].y = guardpath[currentpathindex].y;
-		if(guards[0].x == guardpath[currentpathindex].x && guards[0].y == guardpath[currentpathindex].y)
+			guards[0].position.y = guardpath[currentpathindex].y;
+		if(guards[0].position.x == guardpath[currentpathindex].x && guards[0].position.y == guardpath[currentpathindex].y)
 			currentpathindex = (currentpathindex + 1) % (guardpath.length);
 	}
 
@@ -220,16 +268,30 @@ function update()
 
 	if(gallery[0].contains(nextPosition.x, nextPosition.y))
 	{
-		var insideHole = false;
+		var collision = false;
+
+		// Check for collision with holes
 		for (var i = 1; i < gallery.length; i++) 
 		{
-			if( gallery[i].contains(nextPosition.x, nextPosition.y))
+			if(gallery[i].contains(nextPosition.x, nextPosition.y))
 			{
-				insideHole = true;
+				collision = true;
 				break;
 			}
 		};
-		if(!insideHole)
+
+		// Check for collision with obstacles
+		for (var i = 0; i < obstacles.length; i++) 
+		{
+			if(obstacles[i].contains(nextPosition.x, nextPosition.y))
+			{
+				collision = true;
+				break;
+			}
+		};
+
+		// Player did not collide, set next position
+		if(!collision)
 		{
 			player.x = nextPosition.x;
 			player.y = nextPosition.y;
@@ -241,20 +303,36 @@ function update()
 	guardGraphics.endFill();
 
 	alertedSprite.visible = alerted;
-	for (var i = guards.length - 1; i >= 0; i--) {
-	    drawVisibility(guards[i].x, guards[i].y, step);
-	}
+	
+	drawVisibility(step);
     
     
    	//triangleGraphics.clear();
     //drawVisibility(guards[0].x, guards[0].y, step);
 
-    alertedSprite.x = guards[0].x;
-    alertedSprite.y = guards[0].y - 40;
+    alertedSprite.x = guards[0].position.x;
+    alertedSprite.y = guards[0].position.y - 40;
 
     // save current time to calculate the deltatime next frame
     lastframe = Date.now();
     renderer.render(stage);
+
+    shadowMaskGraphics.clear();
+    //shadowMaskGraphics.beginFill(0x000000, 0);
+    //shadowMaskGraphics.drawRect(0,0,1280,720);
+    //shadowMaskGraphics.endFill();
+    shadowMaskGraphics.lineStyle(0, 0x000000, 1);
+	shadowMaskGraphics.beginFill(0xFFFFFF, 1);
+	shadowMaskGraphics.drawPolygon(gallery[0].points);
+	shadowMaskGraphics.endFill();
+
+	for (var i = 0; i < guards.length; i++) {
+		shadowMaskGraphics.beginFill(0x000000, 1);
+		shadowMaskGraphics.drawPolygon(guards[i].visibility);
+		shadowMaskGraphics.endFill();
+	};
+
+	shadowMask.render(shadowMaskGraphics);
 }
 
 function mouseEventHandler(event)
@@ -272,8 +350,8 @@ function mouseEventHandler(event)
 		//triangleGraphics.clear();
 		//guardGraphics.clear();
 		var position = event.data.global;
-		guards[0].x = position.x;
-		guards[0].y = position.y;
+		guards[0].position.x = position.x;
+		guards[0].position.y = position.y;
 
 		//drawVisibility(guards[0].x, guards[0].y, 0);
 		
@@ -384,270 +462,251 @@ function keyboard(keyCode)
     }
   };
 
-function drawVisibility(x, y, stopat)
+function drawVisibility(stopat)
 {
-	guardGraphics.lineStyle(1, 0x000000, 1);
-	guardGraphics.beginFill(0xff0000);
-	guardGraphics.drawCircle(x, y, 10);
-	guardGraphics.endFill();
-	triangleGraphics.lineStyle(1, 0xFFFFFF);
+	// clear the current visibility mask
+    visibilityMask.clear();
+	visibilityMask.lineStyle(0, 0xFFFF00, 1);
 
-    var endpoints = [];
-
-    // Initialize event structure
-    for (var p = 0; p < gallery.length; p++) {
-	    for (var i = 0;  i < gallery[p].points.length; i+=2) {
-	    	var endpoint = {};
-	    	endpoint.x = gallery[p].points[i];
-			endpoint.y = gallery[p].points[i+1];
-			var dir = { 
-				x: endpoint.x - x, 
-				y: endpoint.y - y
-			};
-			var len = gallery[p].points.length;
-			var e1 = {
-	    		x: gallery[p].points[(len + i-2) % len],
-	    		y: gallery[p].points[(len + i-1) % len]
-	    	}
-	    	var e2 = {
-	    		x: gallery[p].points[(i+2) % len],
-	    		y: gallery[p].points[(i+3) % len]
-	    	}
-
-	    	// normalisation (optimal)
-	    	//var vectorLength = Math.sqrt(Math.pow(dir.x,2) + Math.pow(dir.y, 2));
-	    	//dir.x /= vectorLength;
-	    	//dir.y /= vectorLength;
-
-			endpoint.angle = Math.atan2(dir.y, dir.x) + Math.PI;
-			endpoint.polygon = p;
-			endpoint.index = i;
-			endpoint.neighbour1 = e1; 
-			endpoint.neighbour2 = e2;
-
-	    	endpoints.push(endpoint);
-	    }
-    };
-
-    endpoints.sort(function(a,b){return a.angle - b.angle});
-
-    // TODO: added the first 2 points twice for continuity
-    //endpoints.push(endpoints[0]);
-   	//endpoints.push(endpoints[1]);
-    //endpoints.reverse();
-    //console.debug(endpoints);
-
-    var status = [];
-    var lastVertex;
-	// var ray = new Ray(x, y, endpoints[0].x, endpoints[0].y);
-
-
-	if(stopat > endpoints.length) stopat = endpoints.length;
-	var visPoints = [];
-	for (var pass = 0; pass < 2; pass++) 
+	for (var g = 0; g < guards.length; g++) 
 	{
-		//console.debug(status.length);
-		var steps = (pass > 0 && debug) ? stopat : endpoints.length;
-	    for (var i = 0; i < steps; i++) 
-	    {
-	    	var p = endpoints[i];
+		var o = guards[g].position;
+	
+		guardGraphics.lineStyle(1, 0x000000, 1);
+		guardGraphics.beginFill(0xff0000);
+		guardGraphics.drawCircle(o.x, o.y, 10);
+		guardGraphics.endFill();
+		triangleGraphics.lineStyle(1, 0xFFFFFF);
 
-	    	var nearestwall = status[0];
+	    var endpoints = [];
 
-			var neighbours = [p.neighbour1, p.neighbour2];
-
-			// Add walls if p is the first endpoint of this wall
-	    	for (var j = 0; j < neighbours.length; j++)
-	    	{
-
-	    		var n = neighbours[j];
+	    // Initialize event structure
+	    for (var p = 0; p < gallery.length; p++) {
+		    for (var i = 0;  i < gallery[p].points.length; i+=2) {
+		    	var endpoint = {};
+		    	endpoint.x = gallery[p].points[i];
+				endpoint.y = gallery[p].points[i+1];
 				var dir = { 
-					x: n.x - x, 
-					y: n.y - y
+					x: endpoint.x - o.x, 
+					y: endpoint.y - o.y
 				};
+				var len = gallery[p].points.length;
+				var e1 = {
+		    		x: gallery[p].points[(len + i-2) % len],
+		    		y: gallery[p].points[(len + i-1) % len]
+		    	}
+		    	var e2 = {
+		    		x: gallery[p].points[(i+2) % len],
+		    		y: gallery[p].points[(i+3) % len]
+		    	}
 
-				var exists = false;
-				// check whether the wall is already in the status structure
-	    		for (var z = status.length - 1; z >= 0; z--) 
-	    		{
-	    			exists = status[z].isendpoint(p.x, p.y);
-	    			if(exists)
-	    				break;
-	    		}
+				endpoint.angle = Math.atan2(dir.y, dir.x) + Math.PI;
+				endpoint.polygon = p;
+				endpoint.index = i;
+				endpoint.neighbour1 = e1; 
+				endpoint.neighbour2 = e2;
 
-				//var difference = Math.atan2(dir.y, dir.x) - p.angle;
-				var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
-				//console.log("Add : ? " + difference);
-				//if(difference < -Math.PI || difference > 0)
-				if((neighbourangle < Math.PI && p.angle > Math.PI && neighbourangle + Math.PI * 2 > p.angle && neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
-					(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
-				{
-					//console.log("wall added");
-					//if(exists)
-					//	console.log("wall added twice");
+		    	endpoints.push(endpoint);
+		    }
+	    };
 
-		    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
-		    		if(!exists)
+	    endpoints.sort(function(a,b){return a.angle - b.angle});
+
+	    var status = [];
+	    var lastVertex;
+		// var ray = new Ray(x, y, endpoints[0].x, endpoints[0].y);
+
+
+		if(stopat > endpoints.length) stopat = endpoints.length;
+		var visPoints = [];
+		for (var pass = 0; pass < 2; pass++) 
+		{
+			//console.debug(status.length);
+			var steps = (pass > 0 && debug) ? stopat : endpoints.length;
+		    for (var i = 0; i < steps; i++) 
+		    {
+		    	var p = endpoints[i];
+
+		    	var nearestwall = status[0];
+
+				var neighbours = [p.neighbour1, p.neighbour2];
+
+				// Add walls if p is the first endpoint of this wall
+		    	for (var j = 0; j < neighbours.length; j++)
+		    	{
+
+		    		var n = neighbours[j];
+					var dir = { 
+						x: n.x - o.x, 
+						y: n.y - o.y
+					};
+
+					var exists = false;
+					// check whether the wall is already in the status structure
+		    		for (var z = status.length - 1; z >= 0; z--) 
 		    		{
-		    			wall.age = 0;
-		    						
+		    			exists = status[z].isendpoint(p.x, p.y);
+		    			if(exists)
+		    				break;
+		    		}
+
+					//var difference = Math.atan2(dir.y, dir.x) - p.angle;
+					var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
+					//console.log("Add : ? " + difference);
+					//if(difference < -Math.PI || difference > 0)
+					if((neighbourangle < Math.PI && p.angle > Math.PI && neighbourangle + Math.PI * 2 > p.angle && neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
+						(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
+					{
+						//console.log("wall added");
+						//if(exists)
+						//	console.log("wall added twice");
+
+			    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
+			    		if(!exists)
+			    		{
+			    			wall.age = 0;			
+						}
+						status.push(wall);
 					}
-					status.push(wall);
-				}
 
-	    	};
-			
-			// Remove walls with p as second endpoint
-	    	for (var j = status.length - 1; j >= 0; j--) 
-	    	{
-	    		if(status[j].isendpoint(p.x, p.y) && status[j].age > 0)
-	    		{
-	    			
-	    // 			var otherend = status[j].other(p.x, p.y);
-					// var dir = { 
-					// 	x: otherend.x - x, 
-					// 	y: otherend.y - y
-					// };
-
-					//var difference = Math.atan2(dir.y, dir.x) + Math.PI - p.angle;
-					//console.log("Remove : ? " + difference);
-					//if(difference >= -Math.PI && difference <= 0)
-					//{
+		    	};
+				
+				// Remove walls with p as second endpoint
+		    	for (var j = status.length - 1; j >= 0; j--) 
+		    	{
+		    		if(status[j].isendpoint(p.x, p.y) && status[j].age > 0)
+		    		{
 		    			// remove this wall from the array
 						//console.log("wall removed");
 		    			status.splice(j, 1);
-		    		//}
-	    		}
-	    	};
+		    		}
+		    	};
 
 
-	    	// Sort walls in the status structure on distance to the origin
-	    	var ray = new Ray(x, y, p.x, p.y);
+		    	// Sort walls in the status structure on distance to the origin
+		    	var ray = new Ray(o.x, o.y, p.x, p.y);
 
-	    	for (var j = status.length - 1; j >= 0; j--) 
-	    	{
-	    		var hit = status[j].intersects(ray);
-	    		// calculate the distance from the origin to this wall
-	    		status[j].dist = Math.sqrt(Math.pow(x - hit.x, 2) + Math.pow(y - hit.y, 2));
-	    	};
-
-	    	// TODO: Create this function in another location since we have to reuse it
-	    	status.sort(function(a,b)
-	    	{
-	    		var diff = a.dist - b.dist;
-	    		if(diff > 0) return 1;
-	    		if(diff < 0) return -1;
-	    		if(diff == 0)
-	    		{
-	    			// Check which line is closer by taking a point slightly further on the line
-	    			var p1 = a.interpolate(p.x, p.y, 0.01);
-	    			var p2 = b.interpolate(p.x, p.y, 0.01);
-
-	    			var dist1 = Math.sqrt(Math.pow(x - p1.x, 2) + Math.pow(y - p1.y, 2));
-	    			var dist2 = Math.sqrt(Math.pow(x - p2.x, 2) + Math.pow(y - p2.y, 2));
-
-	    			if(dist1 > dist2) return 1;
-	    			if(dist1 < dist2) return -1;
-	    		}
-
-	    		return 0;
-	    	});
-
-	  //    	triangleGraphics.lineStyle(i+1, 0x000000, 1);
-	  //    	triangleGraphics.moveTo(x,y);
-	  //    	triangleGraphics.lineTo(p.x,p.y);
-
-
-
-	    	// Debug draws
-	    	if(status.length > 0 && pass == 1 && debug)
-	    	{
-		     	var hit = status[0].intersects(ray);
-
-				triangleGraphics.lineStyle(1, 0xff0000, 1);
-				triangleGraphics.moveTo(x,y);
-				triangleGraphics.lineTo(hit.x, hit.y);
-
-
-		     	triangleGraphics.lineStyle(1, 0xFFFF00, 1);
-				triangleGraphics.beginFill(0x000000, 1);
-				triangleGraphics.drawCircle(p.x, p.y, 5);
-				triangleGraphics.endFill();
-
-
-				if(nearestwall != "undefined" && i == stopat - 1)
-				{
-					for (var z = 0; z < status.length; z++) {
-						if(status[z].age > 0)
-							triangleGraphics.lineStyle(6, 0x00ff00, 1);
-						else
-							triangleGraphics.lineStyle(6, 0xff0000, 1);
-						triangleGraphics.moveTo(status[z].x1, status[z].y1);
-						triangleGraphics.lineTo(status[z].x2, status[z].y2);			
-					}
-
-					triangleGraphics.lineStyle(3, 0x0000ff, 1);
-					triangleGraphics.moveTo(nearestwall.x1, nearestwall.y1);
-					triangleGraphics.lineTo(nearestwall.x2, nearestwall.y2);
-				}
-			}
-
-			for (var j = 0; j < status.length; j++) {
-				status[j].age = 1;
-			};
-
-	    	// Check whether the nearest wall has changed, if so construct a visibility triangle
-	    	if(typeof nearestwall != 'undefined' && status.length > 0 && !nearestwall.equals(status[0]))
-	    	{
-	    		if(pass == 1)
+		    	for (var j = status.length - 1; j >= 0; j--) 
 		    	{
-		    		var ray1 = new Ray(x, y, p.x, p.y);
-		    		var hit1 = nearestwall.intersects(ray1);
-		    		
-		    		// DEBUG lines
-		    		if(debug)
-		    		{
-			     		triangleGraphics.lineStyle(1, 0x000000, 1);
-				     	triangleGraphics.moveTo(x,y);
-				     	triangleGraphics.lineTo(p.x, p.y);
-				    }
-		    		
-		    		if (typeof lastVertex != 'undefined')
-		    		{
-		    			var ray2 = new Ray(x, y, lastVertex.x, lastVertex.y);
-		    			var hit2 = nearestwall.intersects(ray2);
-			    		var triangle = new PIXI.Polygon([
-							new PIXI.Point(x, y),
-							new PIXI.Point(hit1.x, hit1.y),
-							new PIXI.Point(hit2.x, hit2.y)
-						]);
+		    		var hit = status[j].intersects(ray);
+		    		// calculate the distance from the origin to this wall
+		    		status[j].dist = Math.sqrt(Math.pow(o.x - hit.x, 2) + Math.pow(o.y - hit.y, 2));
+		    	};
 
-						visPoints.push(new PIXI.Point(hit2.x, hit2.y));
-						visPoints.push(new PIXI.Point(hit1.x, hit1.y));
+		    	// TODO: Create this function in another location since we have to reuse it
+		    	status.sort(function(a,b)
+		    	{
+		    		var diff = a.dist - b.dist;
+		    		if(diff > 0) return 1;
+		    		if(diff < 0) return -1;
+		    		if(diff == 0)
+		    		{
+		    			// Check which line is closer by taking a point slightly further on the line
+		    			var p1 = a.interpolate(p.x, p.y, 0.01);
+		    			var p2 = b.interpolate(p.x, p.y, 0.01);
 
-						// Draw debug triangles
-						if(debug)
-						{
-				    		triangleGraphics.lineStyle(1, 0xFFFF00, 1);
-							triangleGraphics.beginFill(0x0000ff, 0.5);
-							triangleGraphics.drawPolygon(triangle);
-							triangleGraphics.endFill();
+		    			var dist1 = Math.sqrt(Math.pow(o.x - p1.x, 2) + Math.pow(o.y - p1.y, 2));
+		    			var dist2 = Math.sqrt(Math.pow(o.x - p2.x, 2) + Math.pow(o.y - p2.y, 2));
+
+		    			if(dist1 > dist2) return 1;
+		    			if(dist1 < dist2) return -1;
+		    		}
+
+		    		return 0;
+		    	});
+
+		  //    	triangleGraphics.lineStyle(i+1, 0x000000, 1);
+		  //    	triangleGraphics.moveTo(x,y);
+		  //    	triangleGraphics.lineTo(p.x,p.y);
+
+
+
+		    	// Debug draws
+		    	if(status.length > 0 && pass == 1 && debug)
+		    	{
+			     	var hit = status[0].intersects(ray);
+
+					triangleGraphics.lineStyle(1, 0xff0000, 1);
+					triangleGraphics.moveTo(o.x,o.y);
+					triangleGraphics.lineTo(hit.x, hit.y);
+
+
+			     	triangleGraphics.lineStyle(1, 0xFFFF00, 1);
+					triangleGraphics.beginFill(0x000000, 1);
+					triangleGraphics.drawCircle(p.x, p.y, 5);
+					triangleGraphics.endFill();
+
+
+					if(nearestwall != "undefined" && i == stopat - 1)
+					{
+						for (var z = 0; z < status.length; z++) {
+							if(status[z].age > 0)
+								triangleGraphics.lineStyle(6, 0x00ff00, 1);
+							else
+								triangleGraphics.lineStyle(6, 0xff0000, 1);
+							triangleGraphics.moveTo(status[z].x1, status[z].y1);
+							triangleGraphics.lineTo(status[z].x2, status[z].y2);			
+						}
+
+						triangleGraphics.lineStyle(3, 0x0000ff, 1);
+						triangleGraphics.moveTo(nearestwall.x1, nearestwall.y1);
+						triangleGraphics.lineTo(nearestwall.x2, nearestwall.y2);
+					}
+				}
+
+				for (var j = 0; j < status.length; j++) {
+					status[j].age = 1;
+				};
+
+		    	// Check whether the nearest wall has changed, if so construct a visibility triangle
+		    	if(typeof nearestwall != 'undefined' && status.length > 0 && !nearestwall.equals(status[0]))
+		    	{
+		    		if(pass == 1)
+			    	{
+			    		var ray1 = new Ray(o.x, o.y, p.x, p.y);
+			    		var hit1 = nearestwall.intersects(ray1);
+			    		
+			    		// DEBUG lines
+			    		if(debug)
+			    		{
+				     		triangleGraphics.lineStyle(1, 0x000000, 1);
+					     	triangleGraphics.moveTo(o.x,o.y);
+					     	triangleGraphics.lineTo(p.x, p.y);
+					    }
+			    		
+			    		if (typeof lastVertex != 'undefined')
+			    		{
+			    			var ray2 = new Ray(o.x, o.y, lastVertex.x, lastVertex.y);
+			    			var hit2 = nearestwall.intersects(ray2);
+				    		var triangle = new PIXI.Polygon([
+								new PIXI.Point(o.x, o.y),
+								new PIXI.Point(hit1.x, hit1.y),
+								new PIXI.Point(hit2.x, hit2.y)
+							]);
+
+							visPoints.push(new PIXI.Point(hit2.x, hit2.y));
+							visPoints.push(new PIXI.Point(hit1.x, hit1.y));
+
+							// Draw debug triangles
+							if(debug)
+							{
+					    		triangleGraphics.lineStyle(1, 0xFFFF00, 1);
+								triangleGraphics.beginFill(0x0000ff, 0.5);
+								triangleGraphics.drawPolygon(triangle);
+								triangleGraphics.endFill();
+							}
 						}
 					}
-				}
-		    	// Save the new vertex
-	    		lastVertex = p;
-	    	}
+			    	// Save the new vertex
+		    		lastVertex = p;
+		    	}
+		    };
 	    };
-    };
 
-    visibilityPolygon = new PIXI.Polygon(visPoints);
-
-    visibilityMask.clear();
-	visibilityMask.lineStyle(0, 0xFFFF00, 1);
-	visibilityMask.beginFill(0x000000, 0);
-	visibilityMask.drawPolygon(visibilityPolygon);
-	visibilityMask.drawCircle(820, 450, 40);
-	visibilityMask.endFill();
-
+	    //visibilityPolygon = new PIXI.Polygon(visPoints);
+	    guards[g].visibility = new PIXI.Polygon(visPoints);
+    	visibilityMask.beginFill(0x000000, 0);
+		visibilityMask.drawPolygon(guards[g].visibility);
+		visibilityMask.endFill();
+	};
 }
