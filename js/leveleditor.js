@@ -166,7 +166,7 @@ function Export()
 
 function Import()
 {
-	level.load(document.getElementById('tb_Export').value);
+	level.loadJSON(document.getElementById('tb_Export').value);
 	redraw();
 }
 

@@ -13,6 +13,11 @@ Level.prototype.constructor = Level;
 
 Level.prototype.load = function(level)
 {
+	this.loadJSON(levels[level]);
+}
+
+Level.prototype.loadJSON = function(level)
+{
 	newlevel = JSON.parse(level);
 	this.gallery.points = newlevel.gallery.points;
 	for (var i = 0; i < newlevel.holes.length; i++) {
