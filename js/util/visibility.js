@@ -1,4 +1,0 @@
-function drawVisibility(x, y)
-{
-    
-}

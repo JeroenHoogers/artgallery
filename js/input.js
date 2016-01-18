@@ -1,3 +1,9 @@
+var mousedown = false;
+var left = keyboard(37),
+    up = keyboard(38),
+    right = keyboard(39),
+    down = keyboard(40);
+
 function keyboard(keyCode) 
 {
   var key = {};
@@ -6,7 +12,7 @@ function keyboard(keyCode)
   key.isUp = true;
   key.press = undefined;
   key.release = undefined;
-  
+
   //The `downHandler`
   key.downHandler = function(event) 
   {
@@ -99,4 +105,32 @@ function keyboard(keyCode)
       moveplayery = 0;
     }
   };
+
+function mouseEventHandler(event)
+{
+  if(event.type == "mousedown")
+    mousedown = true;
+  else if(event.type =="mouseup")
+    mousedown = false;
+  
+  var position = event.data.global;
+  
+  triangleGraphics.clear();
+  if(mousedown)
+  {
+    //triangleGraphics.clear();
+    //guardGraphics.clear();
+    var position = event.data.global;
+    guards[0].position.x = position.x;
+    guards[0].position.y = position.y;
+
+    //drawVisibility(guards[0].x, guards[0].y, 0);
+    
+    //drawVisibility(position.x, position.y, endpoints.length);
+  }
+
+  drawVisibility(guards[0].x, guards[0].y, 0);
+}
+
+
 
