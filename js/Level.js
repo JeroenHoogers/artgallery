@@ -5,7 +5,7 @@ function Level()
 	this.obstacles = [];
 	this.covers = [];
 	this.paintings = [];
-	this.player = {};
+	this.player = {position : new PIXI.Point()};
 	this.guards = [];
 }
 

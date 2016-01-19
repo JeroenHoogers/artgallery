@@ -252,8 +252,9 @@ function mouseEventHandler(event)
 			};
 		}
 		//Check whether player is selected
-		if (level.player.x <= position.x + 10 && level.player.x >= position.x - 10 && 
-			level.player.y <= position.y + 10 && level.player.y >= position.y - 10)
+		if (level.player != "undefined" &&
+			level.player.position.x <= position.x + 10 && level.player.position.x >= position.x - 10 && 
+			level.player.position.y <= position.y + 10 && level.player.position.y >= position.y - 10)
 		{
 			pointarray = [];
 			creategallery = false;
@@ -368,7 +369,7 @@ function mouseEventHandler(event)
 					candraw = false;
 			};
 			if(candraw)
-				level.player = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
+				level.player = {position : new PIXI.Point(Math.floor(position.x), Math.floor(position.y))};
 		}
 		redraw();
 	}	
@@ -422,16 +423,12 @@ function redraw()
 	//draw Player
 	guardGraphics.lineStyle(1, 0x000000, 1);
 	guardGraphics.beginFill(0x0000ff);
-	guardGraphics.drawCircle(level.player.x, level.player.y, 10);
+	guardGraphics.drawCircle(level.player.position.x, level.player.position.y, 10);
 	guardGraphics.endFill();
 
 	//draw guard path
 	if((createpath || createguards) && guardselected >= 0)
 	{
-		console.log(guardselected);
-		//patrolGraphics.beginFill(0x0000ff);
-		//patrolGraphics.drawPolygon(level.guards[guardselected].guardpath.points);
-		//patrolGraphics.endFill();
 		patrolGraphics.lineStyle(5, 0x0000FF, 1);
 		patrolGraphics.drawPolygon(level.guards[guardselected].guardpath.points);
 	}
