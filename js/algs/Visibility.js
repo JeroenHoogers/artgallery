@@ -1,4 +1,4 @@
-function calculateVisibility(stopat, level)
+function calculateVisibility(stopat)
 {
 	// clear the current visibility mask
     visibilityMask.clear();
@@ -8,29 +8,34 @@ function calculateVisibility(stopat, level)
 	{
 		var o = level.guards[g].position;
 	
-
-		triangleGraphics.lineStyle(1, 0xFFFFFF);
+		debugGraphics.lineStyle(1, 0xFFFFFF);
 
 	    var endpoints = [];
+	    var polygons = [];
+
+	    polygons.push(level.gallery);
+	    for (var i = 0; i < level.holes.length; i++) {
+	     	polygons.push(level.holes[i]);
+	    }; 
 
 	    // Initialize event structure
-	    for (var p = 0; p < gallery.length; p++) {
-		    for (var i = 0;  i < gallery[p].points.length; i+=2) {
+	    for (var p = 0; p < polygons.length; p++) {
+		    for (var i = 0;  i < polygons[p].points.length; i+=2) {
 		    	var endpoint = {};
-		    	endpoint.x = gallery[p].points[i];
-				endpoint.y = gallery[p].points[i+1];
+		    	endpoint.x = polygons[p].points[i];
+				endpoint.y = polygons[p].points[i+1];
 				var dir = { 
 					x: endpoint.x - o.x, 
 					y: endpoint.y - o.y
 				};
-				var len = gallery[p].points.length;
+				var len = polygons[p].points.length;
 				var e1 = {
-		    		x: gallery[p].points[(len + i-2) % len],
-		    		y: gallery[p].points[(len + i-1) % len]
+		    		x: polygons[p].points[(len + i-2) % len],
+		    		y: polygons[p].points[(len + i-1) % len]
 		    	}
 		    	var e2 = {
-		    		x: gallery[p].points[(i+2) % len],
-		    		y: gallery[p].points[(i+3) % len]
+		    		x: polygons[p].points[(i+2) % len],
+		    		y: polygons[p].points[(i+3) % len]
 		    	}
 
 				endpoint.angle = Math.atan2(dir.y, dir.x) + Math.PI;
@@ -148,9 +153,9 @@ function calculateVisibility(stopat, level)
 		    		return 0;
 		    	});
 
-		  //    	triangleGraphics.lineStyle(i+1, 0x000000, 1);
-		  //    	triangleGraphics.moveTo(x,y);
-		  //    	triangleGraphics.lineTo(p.x,p.y);
+		      	// debugGraphics.lineStyle(i+1, 0x000000, 1);
+		      	// debugGraphics.moveTo(x,y);
+		      	// debugGraphics.lineTo(p.x,p.y);
 
 
 
@@ -159,31 +164,31 @@ function calculateVisibility(stopat, level)
 		    	{
 			     	var hit = status[0].intersects(ray);
 
-					triangleGraphics.lineStyle(1, 0xff0000, 1);
-					triangleGraphics.moveTo(o.x,o.y);
-					triangleGraphics.lineTo(hit.x, hit.y);
+					debugGraphics.lineStyle(1, 0xff0000, 1);
+					debugGraphics.moveTo(o.x,o.y);
+					debugGraphics.lineTo(hit.x, hit.y);
 
 
-			     	triangleGraphics.lineStyle(1, 0xFFFF00, 1);
-					triangleGraphics.beginFill(0x000000, 1);
-					triangleGraphics.drawCircle(p.x, p.y, 5);
-					triangleGraphics.endFill();
+			     	debugGraphics.lineStyle(1, 0xFFFF00, 1);
+					debugGraphics.beginFill(0x000000, 1);
+					debugGraphics.drawCircle(p.x, p.y, 5);
+					debugGraphics.endFill();
 
 
 					if(nearestwall != "undefined" && i == stopat - 1)
 					{
 						for (var z = 0; z < status.length; z++) {
 							if(status[z].age > 0)
-								triangleGraphics.lineStyle(6, 0x00ff00, 1);
+								debugGraphics.lineStyle(6, 0x00ff00, 1);
 							else
-								triangleGraphics.lineStyle(6, 0xff0000, 1);
-							triangleGraphics.moveTo(status[z].x1, status[z].y1);
-							triangleGraphics.lineTo(status[z].x2, status[z].y2);			
+								debugGraphics.lineStyle(6, 0xff0000, 1);
+							debugGraphics.moveTo(status[z].x1, status[z].y1);
+							debugGraphics.lineTo(status[z].x2, status[z].y2);			
 						}
 
-						triangleGraphics.lineStyle(3, 0x0000ff, 1);
-						triangleGraphics.moveTo(nearestwall.x1, nearestwall.y1);
-						triangleGraphics.lineTo(nearestwall.x2, nearestwall.y2);
+						debugGraphics.lineStyle(3, 0x0000ff, 1);
+						debugGraphics.moveTo(nearestwall.x1, nearestwall.y1);
+						debugGraphics.lineTo(nearestwall.x2, nearestwall.y2);
 					}
 				}
 
@@ -202,9 +207,9 @@ function calculateVisibility(stopat, level)
 			    		// DEBUG lines
 			    		if(debug)
 			    		{
-				     		triangleGraphics.lineStyle(1, 0x000000, 1);
-					     	triangleGraphics.moveTo(o.x,o.y);
-					     	triangleGraphics.lineTo(p.x, p.y);
+				     		debugGraphics.lineStyle(1, 0x000000, 1);
+					     	debugGraphics.moveTo(o.x,o.y);
+					     	debugGraphics.lineTo(p.x, p.y);
 					    }
 			    		
 			    		if (typeof lastVertex != 'undefined')
@@ -237,9 +242,9 @@ function calculateVisibility(stopat, level)
 	    };
 
 	    //visibilityPolygon = new PIXI.Polygon(visPoints);
-	    guards[g].visibility = new PIXI.Polygon(visPoints);
+	    level.guards[g].visibility = new PIXI.Polygon(visPoints);
     	visibilityMask.beginFill(0x000000, 0);
-		visibilityMask.drawPolygon(guards[g].visibility);
+		visibilityMask.drawPolygon(level.guards[g].visibility);
 		visibilityMask.endFill();
 	};
 }

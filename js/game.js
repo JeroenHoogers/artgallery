@@ -69,10 +69,11 @@ function initialize()
 	stage.addChild(galleryGraphics);
 	stage.addChild(wallGraphics);
 	stage.addChild(guardGraphics);
-	stage.addChild(debugGraphics);
+	stage.addChild(playerGraphics);
 
 	stage.addChild(shadowMaskSprite);
 
+	stage.addChild(debugGraphics);
 	// Mask the texture with the gallery polygon
 	floorSprite.mask = galleryMask;
 
@@ -114,17 +115,17 @@ function loadlevel()
 		new PIXI.Polygon([
 			new PIXI.Point(570,200),
 			new PIXI.Point(680,260),
-			new PIXI.Point(530,340)]
-		)
+			new PIXI.Point(530,340)
+		])
 	];
 
 	level.paintings = [
 		{
-			pos: new PIXI.Point(400,100),
+			position: new PIXI.Point(400,100),
 			value: 1000
 		},
 		{
-			pos: new PIXI.Point(600,100),
+			position: new PIXI.Point(600,100),
 			value: 500
 		}
 	];
@@ -141,21 +142,24 @@ function loadlevel()
 				new PIXI.Point(700,140),
 				new PIXI.Point(500,150)
 			]
-		},
-		{
-			position: new PIXI.Point(960,300),
-			guardpath: []
 		}
+		//,
+		// {
+		// 	position: new PIXI.Point(960,300),
+		// 	guardpath: []
+		// }
 	];
 
 	level.player = {position: new PIXI.Point(900,500)};
 
+	level = new Level();
+	level.load("level1");
 	// Initialize guards
 	for (var i = 0; i < level.guards.length; i++) 
 	{
 		var alertedSprite = new PIXI.Sprite(alertedTexture);
 		alertedSprite.anchor.x = 0.5;
-		alertedSprite.anchor.y = 0.5;
+		alertedSprite.anchor.y = 1.5;
 		alertedSprite.visible = false;
 
 		var lightSprite = new PIXI.Sprite(lightTexture);
@@ -167,7 +171,14 @@ function loadlevel()
 		level.guards[i].light = lightSprite;
 		level.guards[i].visibility = new PIXI.Polygon();
 		level.guards[i].pathindex = 0;
+
+		stage.addChild(level.guards[i].alertedIndicator);
 	}
+
+	// Draw gallery mask
+	galleryMask.beginFill(0);
+	galleryMask.drawPolygon(level.gallery.points);
+	galleryMask.endFill();
 
 	// Draw holes
 	galleryGraphics.clear();
@@ -208,6 +219,9 @@ function draw()
 	playerGraphics.clear();
    	debugGraphics.clear();
 
+    var step = parseInt((Date.now() - starttime) / 1000);
+   	calculateVisibility(step);
+
 	// Draw player
 	playerGraphics.lineStyle(1, 0x000000, 1);
 	playerGraphics.beginFill(0x0000ff);
@@ -241,7 +255,7 @@ function draw()
 
 	shadowMask.render(shadowMaskGraphics);
 
-    renderer.render(stage);
+    
 }
 
 // Update function, called every frame
@@ -256,13 +270,13 @@ function update()
 
 	// Check whether the player can be seen by any of the guards
 	for (var g = 0; g < level.guards.length; g++) {
+		level.guards[g].alerted = false;
 		if(typeof(level.guards[g].visibility) != "undefined" && level.guards[g].visibility.contains(level.player.position.x, level.player.position.y))
 		{
 			level.guards[g].alerted = true;
-
-			break;
 		}
 		level.guards[g].alertedIndicator.visible = level.guards[g].alerted;
+		level.guards[g].alertedIndicator.position = level.guards[g].position;
 	};
 
 	// TODO: Improve this code and make it work for all guards
@@ -270,7 +284,7 @@ function update()
 	{
 		var pathindex = level.guards[0].pathindex;
 
-		if(level.guards[0].position.x < level.guards[0].guardpath[pathindex].x - guardspeed * deltatime)
+		if(level.guards[0].position.x < level.guards[0].guardpath.[pathindex].x - guardspeed * deltatime)
 			level.guards[0].position.x = parseInt(level.guards[0].position.x + guardspeed * deltatime);
 		else if(level.guards[0].position.x > level.guards[0].guardpath[pathindex].x + guardspeed * deltatime)
 			level.guards[0].position.x = parseInt(level.guards[0].position.x - guardspeed * deltatime);
@@ -325,11 +339,9 @@ function update()
 		}
 	}
 
-	//calculateVisibility(step);
-
 	// draw moving objects
 	draw();
-
+	renderer.render(stage);
     // Save current timestamp to calculate the deltatime next frame
     lastframe = Date.now();
 }
