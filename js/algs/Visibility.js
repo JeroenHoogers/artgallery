@@ -6,8 +6,8 @@ function calculateVisibility(stopat)
 
 	for (var g = 0; g < level.guards.length; g++) 
 	{
-		var o = level.guards[g].position;
-	
+		var o = new PIXI.Point(parseInt(level.guards[g].position.x), parseInt(level.guards[g].position.y));
+		
 		debugGraphics.lineStyle(1, 0xFFFFFF);
 
 	    var endpoints = [];
