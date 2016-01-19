@@ -50,7 +50,7 @@ function keyboard(keyCode)
   left.press = function() 
   {
     //Change the cat's velocity when the key is pressed
-    moveplayerx = -1;
+    moveplayer.x = -1; //setX(-1);
     //moveplayery = 0;
   };
 
@@ -61,48 +61,48 @@ function keyboard(keyCode)
     //and the cat isn't moving vertically:
     //Stop the cat
     if (!right.isDown) {
-      moveplayerx = 0;
+      moveplayer.x = 0; //setX(0);
     }
   };
 
   //Up
   up.press = function() 
   {
-    moveplayery = -1;
+    moveplayer.y = -1; //setY(-1);
    // moveplayerx = 0;
   };
   
   up.release = function() 
   {
     if (!down.isDown) {
-      moveplayery = 0;
+      moveplayer.y = 0; //setY(0);
     }
   };
 
   //Right
   right.press = function() 
   {
-    moveplayerx = 1;
+    moveplayer.x = 1;//setX(1);
    // moveplayery = 0;
   };
   right.release = function() 
   {
     if (!left.isDown) {
-      moveplayerx = 0;
+      moveplayer.x = 0;//setX(0);
     }
   };
 
   //Down
   down.press = function() 
   {
-    moveplayery = 1;
+    moveplayer.y = 1;//setY(1);
    // moveplayerx = 0;
   };
 
   down.release = function() 
   {
     if (!up.isDown) {
-      moveplayery = 0;
+      moveplayer.y = 0;//setY(0);
     }
   };
 

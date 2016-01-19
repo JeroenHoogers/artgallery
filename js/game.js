@@ -21,8 +21,7 @@ var debug = false;
 
 var visibilityPolygon;
 
-var moveplayerx = 0;
-var moveplayery = 0;
+var moveplayer = new Vector(0, 0);
 
 var starttime = null;
 
@@ -284,7 +283,6 @@ function update()
 	// if(!level.guards[0].alerted && !debug)
 	// {
 	// 	var pathindex = level.guards[0].pathindex;
-
 	// 	if(level.guards[0].position.x < level.guards[0].guardpath.[pathindex].x - guardspeed * deltatime)
 	// 		level.guards[0].position.x = parseInt(level.guards[0].position.x + guardspeed * deltatime);
 	// 	else if(level.guards[0].position.x > level.guards[0].guardpath[pathindex].x + guardspeed * deltatime)
@@ -302,10 +300,10 @@ function update()
 
 	// 	level.guards[0].pathindex = pathindex;
 	// }
-
+	playermovement = moveplayer.normalize();
 	var nextPosition = new PIXI.Point(
-		parseInt(level.player.position.x + (moveplayerx * playerspeed * deltatime)), 
-		parseInt(level.player.position.y + (moveplayery * playerspeed * deltatime))
+		parseInt(level.player.position.x + (playermovement.x * playerspeed * 0.02)), 
+		parseInt(level.player.position.y + (playermovement.y * playerspeed * 0.02))
 	);
 
 	if(level.gallery.contains(nextPosition.x, nextPosition.y))
@@ -333,6 +331,9 @@ function update()
 		};
 
 		// Player did not collide, set next position
+		if(Math.abs(nextPosition.x - level.player.position.x) != 0)
+			console.log("x:" + Math.abs(nextPosition.x - level.player.position.x));
+		//console.log("y:" + Math.abs(nextPosition.y - level.player.position.y));
 		if(!collision)
 		{
 			level.player.position.x = nextPosition.x;
