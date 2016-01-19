@@ -14,6 +14,7 @@ var shadowMask = new PIXI.RenderTexture(renderer, 1280, 720);
 var shadowMaskGraphics = new PIXI.Graphics();
 var shadowMaskSprite = new PIXI.Sprite(shadowMask);
 
+var guardTexture = new PIXI.RenderTexture(renderer, 20, 20);
 var level = {};
 
 // Enable/Disable debugging
@@ -68,6 +69,7 @@ function initialize()
 	stage.addChild(galleryGraphics);
 	stage.addChild(wallGraphics);
 	stage.addChild(guardGraphics);
+	//stage.addChild(guardGraphics);
 	stage.addChild(playerGraphics);
 
 	stage.addChild(shadowMaskSprite);
@@ -153,10 +155,23 @@ function loadlevel()
 
 	level = new Level();
 	level.load("level1");
+	level.load("level2");
 	
+	guardGraphics.clear();
+	guardGraphics.lineStyle(1, 0x000000, 1);
+	guardGraphics.beginFill(0xff0000);
+	guardGraphics.drawCircle(10, 10, 10);
+	guardGraphics.endFill();
+
+	guardTexture.render(guardGraphics);
+
 	// Initialize guards
 	for (var i = 0; i < level.guards.length; i++) 
 	{
+		var guardSprite = new PIXI.Sprite(guardTexture);
+		guardSprite.anchor.x = 0.5;
+		guardSprite.anchor.y = 0.5;
+
 		var alertedSprite = new PIXI.Sprite(alertedTexture);
 		alertedSprite.anchor.x = 0.5;
 		alertedSprite.anchor.y = 1.5;
@@ -172,7 +187,9 @@ function loadlevel()
 		level.guards[i].visibility = new PIXI.Polygon();
 		level.guards[i].pathindex = 0;
 
+		level.guards[i].light.mask = visibilityMask;
 		stage.addChild(level.guards[i].alertedIndicator);
+		guardGraphics.addChild(level.guards[i].light);
 	}
 
 	// Draw gallery mask
@@ -243,6 +260,10 @@ function draw()
 		guardGraphics.beginFill(0xff0000);
 		guardGraphics.drawCircle(g.position.x, g.position.y, 10);
 		guardGraphics.endFill();
+		// guardGraphics.lineStyle(1, 0x000000, 1);
+		// guardGraphics.beginFill(0xff0000);
+		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
+		// guardGraphics.endFill();
 
 		// Add guard visibility to the shadow mask
 		shadowMaskGraphics.beginFill(0x000000, 1);
@@ -250,7 +271,6 @@ function draw()
 		shadowMaskGraphics.endFill();
 
 		// TODO: make guard drawable and add it to the guard
-		stage.addChild(g.alertedIndicator);
 	};
 
 	shadowMask.render(shadowMaskGraphics);
@@ -276,6 +296,7 @@ function update()
 			level.guards[g].alerted = true;
 		}
 		level.guards[g].alertedIndicator.visible = level.guards[g].alerted;
+		level.guards[g].light.position = level.guards[g].position;
 		level.guards[g].alertedIndicator.position = level.guards[g].position;
 	};
 
@@ -304,6 +325,8 @@ function update()
 	var nextPosition = new PIXI.Point(
 		parseInt(level.player.position.x + (playermovement.x * playerspeed * 0.02)), 
 		parseInt(level.player.position.y + (playermovement.y * playerspeed * 0.02))
+		parseInt(level.player.position.x + (playermovement.x * playerspeed * deltatime)), 
+		parseInt(level.player.position.y + (playermovement.y * playerspeed * deltatime))
 	);
 
 	if(level.gallery.contains(nextPosition.x, nextPosition.y))

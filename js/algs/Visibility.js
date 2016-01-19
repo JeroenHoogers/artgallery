@@ -243,6 +243,7 @@ function calculateVisibility(stopat)
 
 	    //visibilityPolygon = new PIXI.Polygon(visPoints);
 	    level.guards[g].visibility = new PIXI.Polygon(visPoints);
+
     	visibilityMask.beginFill(0x000000, 0);
 		visibilityMask.drawPolygon(level.guards[g].visibility);
 		visibilityMask.endFill();
