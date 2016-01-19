@@ -152,7 +152,7 @@ function loadlevel()
 	level.player = {position: new PIXI.Point(900,500)};
 
 	level = new Level();
-	level.load("level1");
+	level.load("level2");
 	
 	// Initialize guards
 	for (var i = 0; i < level.guards.length; i++) 
@@ -277,33 +277,54 @@ function update()
 		}
 		level.guards[g].alertedIndicator.visible = level.guards[g].alerted;
 		level.guards[g].alertedIndicator.position = level.guards[g].position;
-	};
+	
 
 	// TODO: Improve this code and make it work for all guards
-	// if(!level.guards[0].alerted && !debug)
-	// {
-	// 	var pathindex = level.guards[0].pathindex;
-	// 	if(level.guards[0].position.x < level.guards[0].guardpath.[pathindex].x - guardspeed * deltatime)
-	// 		level.guards[0].position.x = parseInt(level.guards[0].position.x + guardspeed * deltatime);
-	// 	else if(level.guards[0].position.x > level.guards[0].guardpath[pathindex].x + guardspeed * deltatime)
-	// 		level.guards[0].position.x = parseInt(level.guards[0].position.x - guardspeed * deltatime);
-	// 	else
-	// 		level.guards[0].position.x = level.guards[0].guardpath[pathindex].x;
-	// 	if(level.guards[0].position.y < level.guards[0].guardpath[pathindex].y)
-	// 		level.guards[0].position.y = parseInt(level.guards[0].position.y + guardspeed * deltatime);
-	// 	else if(level.guards[0].position.y > level.guards[0].guardpath[pathindex].y + guardspeed * deltatime)
-	// 		level.guards[0].position.y = parseInt(level.guards[0].position.y - guardspeed * deltatime);
-	// 	else
-	// 		level.guards[0].position.y = level.guards[0].guardpath[pathindex].y;
-	// 	if(level.guards[0].position.x == level.guards[0].guardpath[pathindex].x && level.guards[0].position.y == level.guards[0].guardpath[pathindex].y)
-	// 		pathindex = (pathindex + 1) % (level.guards[0].guardpath.length);
+		if(!level.guards[g].alerted && !debug)
+		{
+			var pathindex = level.guards[g].pathindex;
+			var currentguardposition = new PIXI.Point(level.guards[g].position.x, level.guards[g].position.y);
+			var nextguardposition = new PIXI.Point(level.guards[g].guardpath.points[pathindex], level.guards[g].guardpath.points[pathindex + 1]);
+			//var nextguardposition = new PIXI.Point(level.guards[g].guardpath.points[pathindex + 2], level.guards[g].guardpath.points[pathindex + 3]);
 
-	// 	level.guards[0].pathindex = pathindex;
-	// }
+			var lastvisited = new Vector(currentguardposition.x, currentguardposition.y);
+			var target = new Vector(nextguardposition.x, nextguardposition.y);
+			var direction = target.sub(lastvisited);
+			direction = direction.normalize();
+
+			var nextPosition = new PIXI.Point(
+				level.guards[g].position.x + (direction.x * guardspeed * deltatime), 
+				level.guards[g].position.y + (direction.y * guardspeed * deltatime)
+			);
+			level.guards[g].position.x = nextPosition.x;
+			level.guards[g].position.y = nextPosition.y;
+
+			// if(level.guards[g].position.x < level.guards[g].guardpath.points[pathindex] - guardspeed * deltatime)
+			// 	level.guards[g].position.x = parseInt(level.guards[g].position.x + guardspeed * deltatime);
+			// else if(level.guards[g].position.x > level.guards[g].guardpath.points[pathindex] + guardspeed * deltatime)
+			// 	level.guards[g].position.x = parseInt(level.guards[g].position.x - guardspeed * deltatime);
+			// else
+			// 	level.guards[g].position.x = level.guards[g].guardpath.points[pathindex];
+			// if(level.guards[g].position.y < level.guards[g].guardpath.points[pathindex + 1])
+			// 	level.guards[g].position.y = parseInt(level.guards[g].position.y + guardspeed * deltatime);
+			// else if(level.guards[g].position.y > level.guards[g].guardpath.points[pathindex + 1] + guardspeed * deltatime)
+			// 	level.guards[g].position.y = parseInt(level.guards[g].position.y - guardspeed * deltatime);
+			// else
+			// 	level.guards[g].position.y = level.guards[g].guardpath.points[pathindex + 1];
+			if(currentguardposition.x >= nextguardposition.x - 10 && currentguardposition.x <= nextguardposition.x + 10
+				&& currentguardposition.y >= nextguardposition.y - 10 && currentguardposition.y <= nextguardposition.y + 10)
+			{
+				level.guards[g].position.x = nextguardposition.x;
+				level.guards[g].position.y = nextguardposition.y;
+				pathindex = (pathindex + 2) % (level.guards[g].guardpath.points.length);
+			}
+			level.guards[g].pathindex = pathindex;
+		}
+	};
 	playermovement = moveplayer.normalize();
 	var nextPosition = new PIXI.Point(
-		parseInt(level.player.position.x + (playermovement.x * playerspeed * 0.02)), 
-		parseInt(level.player.position.y + (playermovement.y * playerspeed * 0.02))
+		level.player.position.x + (playermovement.x * playerspeed * deltatime), 
+		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
 
 	if(level.gallery.contains(nextPosition.x, nextPosition.y))
@@ -331,8 +352,6 @@ function update()
 		};
 
 		// Player did not collide, set next position
-		if(Math.abs(nextPosition.x - level.player.position.x) != 0)
-			console.log("x:" + Math.abs(nextPosition.x - level.player.position.x));
 		//console.log("y:" + Math.abs(nextPosition.y - level.player.position.y));
 		if(!collision)
 		{
