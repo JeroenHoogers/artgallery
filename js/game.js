@@ -44,9 +44,9 @@ var debugGraphics = new PIXI.Graphics();
 
 stage.interactive = true;
 stage.buttonMode = true;
-// stage.on("mousemove", mouseEventHandler);
-// stage.on("mousedown", mouseEventHandler);
-// stage.on("mouseup", mouseEventHandler);
+stage.on("mousemove", mouseEventHandler);
+stage.on("mousedown", mouseEventHandler);
+stage.on("mouseup", mouseEventHandler);
 
 var lastframe;
 var playerspeed = 200;
@@ -154,6 +154,7 @@ function loadlevel()
 
 	level = new Level();
 	level.load("level1");
+	
 	// Initialize guards
 	for (var i = 0; i < level.guards.length; i++) 
 	{
@@ -280,27 +281,27 @@ function update()
 	};
 
 	// TODO: Improve this code and make it work for all guards
-	if(!level.guards[0].alerted && !debug)
-	{
-		var pathindex = level.guards[0].pathindex;
+	// if(!level.guards[0].alerted && !debug)
+	// {
+	// 	var pathindex = level.guards[0].pathindex;
 
-		if(level.guards[0].position.x < level.guards[0].guardpath.[pathindex].x - guardspeed * deltatime)
-			level.guards[0].position.x = parseInt(level.guards[0].position.x + guardspeed * deltatime);
-		else if(level.guards[0].position.x > level.guards[0].guardpath[pathindex].x + guardspeed * deltatime)
-			level.guards[0].position.x = parseInt(level.guards[0].position.x - guardspeed * deltatime);
-		else
-			level.guards[0].position.x = level.guards[0].guardpath[pathindex].x;
-		if(level.guards[0].position.y < level.guards[0].guardpath[pathindex].y)
-			level.guards[0].position.y = parseInt(level.guards[0].position.y + guardspeed * deltatime);
-		else if(level.guards[0].position.y > level.guards[0].guardpath[pathindex].y + guardspeed * deltatime)
-			level.guards[0].position.y = parseInt(level.guards[0].position.y - guardspeed * deltatime);
-		else
-			level.guards[0].position.y = level.guards[0].guardpath[pathindex].y;
-		if(level.guards[0].position.x == level.guards[0].guardpath[pathindex].x && level.guards[0].position.y == level.guards[0].guardpath[pathindex].y)
-			pathindex = (pathindex + 1) % (level.guards[0].guardpath.length);
+	// 	if(level.guards[0].position.x < level.guards[0].guardpath.[pathindex].x - guardspeed * deltatime)
+	// 		level.guards[0].position.x = parseInt(level.guards[0].position.x + guardspeed * deltatime);
+	// 	else if(level.guards[0].position.x > level.guards[0].guardpath[pathindex].x + guardspeed * deltatime)
+	// 		level.guards[0].position.x = parseInt(level.guards[0].position.x - guardspeed * deltatime);
+	// 	else
+	// 		level.guards[0].position.x = level.guards[0].guardpath[pathindex].x;
+	// 	if(level.guards[0].position.y < level.guards[0].guardpath[pathindex].y)
+	// 		level.guards[0].position.y = parseInt(level.guards[0].position.y + guardspeed * deltatime);
+	// 	else if(level.guards[0].position.y > level.guards[0].guardpath[pathindex].y + guardspeed * deltatime)
+	// 		level.guards[0].position.y = parseInt(level.guards[0].position.y - guardspeed * deltatime);
+	// 	else
+	// 		level.guards[0].position.y = level.guards[0].guardpath[pathindex].y;
+	// 	if(level.guards[0].position.x == level.guards[0].guardpath[pathindex].x && level.guards[0].position.y == level.guards[0].guardpath[pathindex].y)
+	// 		pathindex = (pathindex + 1) % (level.guards[0].guardpath.length);
 
-		level.guards[0].pathindex = pathindex;
-	}
+	// 	level.guards[0].pathindex = pathindex;
+	// }
 
 	var nextPosition = new PIXI.Point(
 		parseInt(level.player.position.x + (moveplayerx * playerspeed * deltatime)), 

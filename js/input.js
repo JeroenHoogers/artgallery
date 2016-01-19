@@ -51,7 +51,7 @@ function keyboard(keyCode)
   {
     //Change the cat's velocity when the key is pressed
     moveplayerx = -1;
-    moveplayery = 0;
+    //moveplayery = 0;
   };
 
   //Left arrow key `release` method
@@ -60,7 +60,7 @@ function keyboard(keyCode)
     //If the left arrow has been released, and the right arrow isn't down,
     //and the cat isn't moving vertically:
     //Stop the cat
-    if (!right.isDown && moveplayery === 0) {
+    if (!right.isDown) {
       moveplayerx = 0;
     }
   };
@@ -69,12 +69,12 @@ function keyboard(keyCode)
   up.press = function() 
   {
     moveplayery = -1;
-    moveplayerx = 0;
+   // moveplayerx = 0;
   };
   
   up.release = function() 
   {
-    if (!down.isDown && moveplayerx === 0) {
+    if (!down.isDown) {
       moveplayery = 0;
     }
   };
@@ -83,11 +83,11 @@ function keyboard(keyCode)
   right.press = function() 
   {
     moveplayerx = 1;
-    moveplayery = 0;
+   // moveplayery = 0;
   };
   right.release = function() 
   {
-    if (!left.isDown && moveplayery === 0) {
+    if (!left.isDown) {
       moveplayerx = 0;
     }
   };
@@ -96,12 +96,12 @@ function keyboard(keyCode)
   down.press = function() 
   {
     moveplayery = 1;
-    moveplayerx = 0;
+   // moveplayerx = 0;
   };
 
   down.release = function() 
   {
-    if (!up.isDown && moveplayerx === 0) {
+    if (!up.isDown) {
       moveplayery = 0;
     }
   };
@@ -115,21 +115,21 @@ function mouseEventHandler(event)
   
   var position = event.data.global;
   
-  triangleGraphics.clear();
+  debugGraphics.clear();
   if(mousedown)
   {
     //triangleGraphics.clear();
     //guardGraphics.clear();
     var position = event.data.global;
-    guards[0].position.x = position.x;
-    guards[0].position.y = position.y;
+    level.guards[0].position.x = position.x;
+    level.guards[0].position.y = position.y;
 
     //drawVisibility(guards[0].x, guards[0].y, 0);
     
     //drawVisibility(position.x, position.y, endpoints.length);
   }
 
-  drawVisibility(guards[0].x, guards[0].y, 0);
+    calculateVisibility(level.guards[0].x, level.guards[0].y, 0);
 }
 
 
