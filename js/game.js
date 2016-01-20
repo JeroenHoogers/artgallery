@@ -1,5 +1,5 @@
 var stage = new PIXI.Container();
-var renderer = PIXI.autoDetectRenderer(1280, 720,{backgroundColor : 0xCCCCCC});
+var renderer = PIXI.autoDetectRenderer(1280, 720,{backgroundColor : 0x999999});
 renderer.forceFXAA = true;
 document.body.appendChild(renderer.view);
 
@@ -7,14 +7,16 @@ document.body.appendChild(renderer.view);
 var floorTexture = PIXI.Texture.fromImage("assets/textures/wood.jpg");
 var alertedTexture = PIXI.Texture.fromImage("assets/textures/mgs.png");
 var lightTexture = PIXI.Texture.fromImage("assets/textures/light.png");
+var wallTexture = PIXI.Texture.fromImage("assets/textures/wall.jpg")
 
 var floorSprite = new PIXI.extras.TilingSprite(floorTexture, 1280, 720);
+var wallSprite = new PIXI.extras.TilingSprite(wallTexture, 1280, 720);
 
 var shadowMask = new PIXI.RenderTexture(renderer, 1280, 720);
 var shadowMaskGraphics = new PIXI.Graphics();
 var shadowMaskSprite = new PIXI.Sprite(shadowMask);
 
-var guardTexture = new PIXI.RenderTexture(renderer, 20, 20);
+var guardTexture = new PIXI.RenderTexture(renderer, 30, 30);
 var level = {};
 
 // Enable/Disable debugging
@@ -64,10 +66,13 @@ function initialize()
 
 	// Add graphics objects
 	stage.addChild(floorSprite);
+
 	stage.addChild(obstacleGraphics);
 	stage.addChild(shadowGraphics);
+
 	stage.addChild(galleryGraphics);
 	stage.addChild(wallGraphics);
+	stage.addChild(wallSprite);
 	stage.addChild(guardGraphics);
 	//stage.addChild(guardGraphics);
 	stage.addChild(playerGraphics);
@@ -77,6 +82,8 @@ function initialize()
 	stage.addChild(debugGraphics);
 	// Mask the texture with the gallery polygon
 	floorSprite.mask = galleryMask;
+
+	wallSprite.mask = wallGraphics;
 
 	// Load the gallery
 	loadlevel();
@@ -157,9 +164,9 @@ function loadlevel()
 	level.load("level2");
 	
 	guardGraphics.clear();
-	guardGraphics.lineStyle(1, 0x000000, 1);
+	guardGraphics.lineStyle(2, 0x990000, 1);
 	guardGraphics.beginFill(0xff0000);
-	guardGraphics.drawCircle(10, 10, 10);
+	guardGraphics.drawCircle(15, 15, 10);
 	guardGraphics.endFill();
 
 	guardTexture.render(guardGraphics);
@@ -180,6 +187,8 @@ function loadlevel()
 		lightSprite.anchor.x = 0.5;
 		lightSprite.anchor.y = 0.5;
 
+		level.guards[i].container = new PIXI.Container();
+		level.guards[i].sprite = guardSprite;
 		level.guards[i].alerted = false;
 		level.guards[i].alertedIndicator = alertedSprite;
 		level.guards[i].light = lightSprite;
@@ -187,8 +196,12 @@ function loadlevel()
 		level.guards[i].pathindex = 0;
 
 		level.guards[i].light.mask = visibilityMask;
-		stage.addChild(level.guards[i].alertedIndicator);
-		guardGraphics.addChild(level.guards[i].light);
+
+		stage.addChild(level.guards[i].container);
+
+		level.guards[i].container.addChild(level.guards[i].light);
+		level.guards[i].container.addChild(level.guards[i].sprite);
+		level.guards[i].container.addChild(level.guards[i].alertedIndicator);
 	}
 
 	// Draw gallery mask
@@ -196,19 +209,23 @@ function loadlevel()
 	galleryMask.drawPolygon(level.gallery.points);
 	galleryMask.endFill();
 
+	// Draw gallery walls
+	wallGraphics.clear();
+	wallGraphics.lineStyle(10, 0xFFFFFF, 1);
+	wallGraphics.drawPolygon(level.gallery.points);
+
 	// Draw holes
 	galleryGraphics.clear();
 	for (var i = 0; i < level.holes.length; i++)  {
-		galleryGraphics.beginFill(0xCCCCCC);
+		galleryGraphics.beginFill(0x999999);
 		galleryGraphics.drawPolygon(level.holes[i].points);
 		galleryGraphics.endFill();
-		galleryGraphics.lineStyle(5, 0xFFFFFF, 1);
-		galleryGraphics.drawPolygon(level.holes[i].points);
+
+		wallGraphics.lineStyle(5, 0xFFFFFF, 1);
+		wallGraphics.drawPolygon(level.holes[i].points);
 	}
 
-	wallGraphics.clear();
-	wallGraphics.lineStyle(5, 0xFFFFFF, 1);
-	wallGraphics.drawPolygon(level.gallery.points);
+
 
 	// Draw obstacles
 	obstacleGraphics.clear();
@@ -239,8 +256,8 @@ function draw()
    	calculateVisibility(step);
 
 	// Draw player
-	playerGraphics.lineStyle(1, 0x000000, 1);
-	playerGraphics.beginFill(0x0000ff);
+	playerGraphics.lineStyle(2, 0x000099, 1);
+	playerGraphics.beginFill(0x2222ff);
 	playerGraphics.drawCircle(level.player.position.x, level.player.position.y, 10);
 	playerGraphics.endFill();
 
@@ -255,10 +272,10 @@ function draw()
 		var g = level.guards[i];
 
 		// Draw guards
-		guardGraphics.lineStyle(1, 0x000000, 1);
-		guardGraphics.beginFill(0xff0000);
-		guardGraphics.drawCircle(g.position.x, g.position.y, 10);
-		guardGraphics.endFill();
+		// guardGraphics.lineStyle(1, 0x000000, 1);
+		// guardGraphics.beginFill(0xff0000);
+		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
+		// guardGraphics.endFill();
 		// guardGraphics.lineStyle(1, 0x000000, 1);
 		// guardGraphics.beginFill(0xff0000);
 		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
@@ -295,8 +312,8 @@ function update()
 			level.guards[g].alerted = true;
 		}
 		level.guards[g].alertedIndicator.visible = level.guards[g].alerted;
-		level.guards[g].light.position = level.guards[g].position;
-		level.guards[g].alertedIndicator.position = level.guards[g].position;
+		//level.guards[g].light.position = level.guards[g].position;
+		level.guards[g].container.position = level.guards[g].position;
 	
 
 	// TODO: Improve this code and make it work for all guards
