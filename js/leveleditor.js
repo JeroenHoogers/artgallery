@@ -12,7 +12,7 @@ var debug = false;
 
 //initialise
 var mousedown = false;
-var snapPoints = false;
+var snappoints = false;
 
 //select option variables
 var creategallery = false;
@@ -60,6 +60,7 @@ stage.on("mousemove", mouseEventHandler);
 stage.on("mousedown", mouseEventHandler);
 stage.on("mouseup", mouseEventHandler);
 var ctrlKey = keyboard(16);
+var delKey = keyboard(46);
 
 update();
 
@@ -104,11 +105,31 @@ function keyboard(keyCode)
 }
   ctrlKey.press = function() 
   {
-    snapPoints = true;
+    snappoints = true;
   };
   ctrlKey.release = function() 
   {
-    snapPoints = false;
+    snappoints = false;
+  };
+  delKey.press = function() 
+  {
+	if(pointselected >= 0)
+	{
+		if(guardselected >= 0 && !createpath)
+		{
+			level.guards.splice(guardselected, 1)
+			guardselected = -1;
+		}
+		else
+		{
+			pointarray.splice(pointselected, 2);
+			setpoints(pointarray);
+		}
+	}
+	redraw();
+  };
+  delKey.release = function() 
+  {
   };
 
 function update()
@@ -137,7 +158,8 @@ function CreateScene(scene)
 
 		case 2:
 			level.holes.push(new PIXI.Polygon());
-			holeselected = -1;
+			var holeAmount = level.holes.length;
+			holeselected = holeAmount - 1;
 			newHole = true;
 			break;
 
@@ -183,6 +205,9 @@ function mouseEventHandler(event)
 		position.y = 720;
 	if(event.type == "mousedown")
 	{
+		pointselected = -1;
+		if(!createpath)
+			guardselected = -1;
 		//Check whether a gallery point is selected
 		for (var i = 0; i < level.gallery.points.length; i+=2) {
 			if (level.gallery.points[i] <= position.x + 10 && level.gallery.points[i] >= position.x - 10 && 
@@ -193,7 +218,7 @@ function mouseEventHandler(event)
 				createguards = false;
 				newHole = false;
 				createplayer = false;
-				pointselected = i;			
+				pointselected = i;
 			}
 		};
 
@@ -227,6 +252,7 @@ function mouseEventHandler(event)
 					pointselected = 0;
 					break;
 				}
+				pointselected = -1;
 				creategallery = false;
 				createguards = true;
 				newHole = false;
@@ -234,7 +260,7 @@ function mouseEventHandler(event)
 			}
 		};
 
-		if((createpath || createguards) && guardselected >= 0)
+		if(createpath && guardselected >= 0)
 		{
 			for (var j = 0; j < level.guards[guardselected].guardpath.points.length; j+=2) {
 				console.log(level.guards[guardselected].guardpath)
@@ -266,6 +292,7 @@ function mouseEventHandler(event)
 		if(pointselected < 0)
 		{
 			pointarray.push(Math.floor(position.x),Math.floor(position.y));
+			pointselected = pointarray.length - 2;
 		}
 
 		if(createguards && guardselected < 0 && level.gallery.contains(position.x, position.y)) //Create new Guard
@@ -278,22 +305,17 @@ function mouseEventHandler(event)
 
 		mousedown = true;
 		var jsonstring = JSON.stringify(pointarray);
-		console.log(jsonstring);
 
 
 	}
 	else if(event.type =="mouseup")
 	{
-		console.log("up : " + position.x + "h : " + position.y);
-		pointselected = -1;
-		if(!createpath)
-			guardselected = -1;
 		mousedown = false;
 	}
 	
 	if(mousedown)
 	{
-		if((creategallery || newHole) && snapPoints)
+		if((creategallery || newHole) && snappoints)
 		{
 			//Snap with gallery walls
 			for (var i = 0; i < level.gallery.points.length; i+=2) {
@@ -335,32 +357,13 @@ function mouseEventHandler(event)
 			pointarray[pointselected] = Math.floor(position.x);
 			pointarray[pointselected+1] = Math.floor(position.y);
 		}
+		setpoints(pointarray);
 
-		if(creategallery) // new gallery point position
-		{
-			level.gallery = new PIXI.Polygon(pointarray);
-		}
-		else if(newHole && holeselected < 0){//change last hole point position
-			var holeAmount = level.holes.length;
-			level.holes[holeAmount - 1] = new PIXI.Polygon(pointarray);
-		}
-		else if(newHole && holeselected >= 0){ // change current hole point position
-			level.holes[holeselected] = new PIXI.Polygon(pointarray);
-		}
-		else if(guardselected >= 0 && !createpath && level.gallery.contains(position.x, position.y)){ //Change current guard position
-			console.log("new position");
+		if(guardselected >= 0 && !createpath && level.gallery.contains(position.x, position.y)){ //Change current guard position
 			level.guards[guardselected].position.x = Math.floor(position.x);
 			level.guards[guardselected].position.y = Math.floor(position.y);
 			level.guards[guardselected].guardpath.points[0] = Math.floor(position.x);
 			level.guards[guardselected].guardpath.points[1] = Math.floor(position.y);
-			console.log(level.guards[guardselected].guardpath);
-		}
-		else if(guardselected >= 0 && createpath && level.gallery.contains(position.x, position.y)){
-			console.log("new path");
-			level.guards[guardselected].position.x = Math.floor(pointarray[0]);
-			level.guards[guardselected].position.y = Math.floor(pointarray[1]);
-			level.guards[guardselected].guardpath = new PIXI.Polygon(pointarray);
-			console.log(level.guards[guardselected].guardpath);
 		}
 		else if(createplayer && level.gallery.contains(position.x, position.y)){ //Change player position
 			var candraw = true;
@@ -373,6 +376,31 @@ function mouseEventHandler(event)
 		}
 		redraw();
 	}	
+}
+
+function setpoints(points)
+{
+	// new gallery point position or position altered
+	if(creategallery) 
+	{
+		level.gallery = new PIXI.Polygon(points);
+	}
+ 	
+ 	// change current hole points to new array
+	else if(newHole)
+	{
+		if(points.length > 0)
+			level.holes[holeselected] = new PIXI.Polygon(points);
+		else
+			level.holes.splice(holeselected, 1);
+	}
+	// change current guard path points to new array
+	else if(guardselected >= 0 && createpath && points.length >= 2){
+		level.guards[guardselected].position.x = Math.floor(points[0]);
+		level.guards[guardselected].position.y = Math.floor(points[1]);
+		level.guards[guardselected].guardpath = new PIXI.Polygon(points);
+		console.log(level.guards[guardselected].guardpath);
+	}
 }
 
 function redraw()
