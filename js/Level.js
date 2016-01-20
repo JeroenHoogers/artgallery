@@ -1,6 +1,7 @@
 function Level()
 {
 	this.gallery = new PIXI.Polygon([]);
+	this.spawn = [];
 	this.holes = [];
 	this.obstacles = [];
 	this.covers = [];
