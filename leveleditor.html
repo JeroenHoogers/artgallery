@@ -31,17 +31,28 @@
 				margin: 3px;
 				width: 200px;
 			}
+			input[type='radio']{
+				padding: 10px;
+				margin: 3px;
+				width: 30px;
+			}
 		</style> 
 	</head>
 	<body style="background:#ccc">
 		<script type="text/javascript" src="js/leveleditor.js"></script>
-		<input type="button" id="btn_gallery" onclick="CreateScene(1);" value="Create Gallery"> <br> <br>
-		<input type="button" id="btn_Holes" onclick="CreateScene(2);" value="Add Hole"> <br> <br>
-		<input type="button" id="btn_Guards" onclick="CreateScene(3);" value="Create Guards"> <br> <br>
-		<input type="button" id="btn_Guardpath" onclick="CreateScene(4);" value="Create Guard path"> <br> <br>
-		<input type="button" id="btn_Player" onclick="CreateScene(5);" value="Create Player"> <br> <br>
-		<input type="button" id="btn_Export" onclick="Export();" value="Export"> <br> <br>
-		<input type="button" id="btn_Import" onclick="Import();" value="Import"> <br> <br>
+		/<input type="button" id="btn_gallery" onclick="CreateScene(1);" value="Create Gallery"></input> <br> <br>
+		<input type="button" id="btn_Holes" onclick="CreateScene(2);" value="Add Hole"></input> <br> <br>
+		<input type="button" id="btn_Obstacle" onclick="CreateScene(3);" value="Create Obstacle"></input> <br> <br>
+		<input type="button" id="btn_Cover" onclick="CreateScene(4);" value="Create Covers"></input> <br> <br>
+		<input type="button" id="btn_Guards" onclick="CreateScene(5);" value="Create Guards"></input> <br> <br>
+		<input type="button" id="btn_Guardpath" onclick="CreateScene(6);" value="Create Guard path"></input> <br> <br>
+		<input type="button" id="btn_Player" onclick="CreateScene(7);" value="Create Player"></input> <br> <br>
+		<input type="button" id="btn_Painting" onclick="CreateScene(8);" value="Create Painting"></input>
+		<input type="radio" name="rad_paintingvalue" id="rad_Painting_Low" checked text="Low">L</input>
+		<input type="radio" name="rad_paintingvalue" id="rad_Painting_Medium" text="Medium">M</input>
+		<input type="radio" name="rad_paintingvalue" id="rad_Painting_High" value="High">H</input><br> <br>
+		<input type="button" id="btn_Export" onclick="Export();" value="Export"></input> <br> <br>
+		<input type="button" id="btn_Import" onclick="Import();" value="Import"></input> <br> <br>
 		<input type="textbox" id="tb_Export">
 	</body>
 </html>
