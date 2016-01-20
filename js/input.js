@@ -2,7 +2,8 @@ var mousedown = false;
 var left = keyboard(37),
     up = keyboard(38),
     right = keyboard(39),
-    down = keyboard(40);
+    down = keyboard(40),
+    use = keyboard(69);
 
 function keyboard(keyCode) 
 {
@@ -68,41 +69,54 @@ function keyboard(keyCode)
   //Up
   up.press = function() 
   {
-    moveplayer.y = -1; //setY(-1);
+    moveplayer.y = -1; 
    // moveplayerx = 0;
   };
   
   up.release = function() 
   {
     if (!down.isDown) {
-      moveplayer.y = 0; //setY(0);
+      moveplayer.y = 0; 
     }
   };
 
   //Right
   right.press = function() 
   {
-    moveplayer.x = 1;//setX(1);
+    moveplayer.x = 1;
    // moveplayery = 0;
   };
   right.release = function() 
   {
     if (!left.isDown) {
-      moveplayer.x = 0;//setX(0);
+      moveplayer.x = 0;
     }
   };
 
   //Down
   down.press = function() 
   {
-    moveplayer.y = 1;//setY(1);
+    moveplayer.y = 1;
    // moveplayerx = 0;
   };
 
   down.release = function() 
   {
     if (!up.isDown) {
-      moveplayer.y = 0;//setY(0);
+      moveplayer.y = 0;
+    }
+  };
+
+  use.press = function() 
+  {
+    useKeydown = true;
+   // moveplayerx = 0;
+  };
+
+  use.release = function() 
+  {
+    if (!use.isDown) {
+      useKeydown = false;
     }
   };
 
@@ -123,6 +137,7 @@ function mouseEventHandler(event)
     var position = event.data.global;
     level.guards[0].position.x = position.x;
     level.guards[0].position.y = position.y;
+    console.log("x:" +position.x +" y:"+ position.y);
 
     //drawVisibility(guards[0].x, guards[0].y, 0);
     

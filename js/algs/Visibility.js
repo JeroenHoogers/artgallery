@@ -7,7 +7,7 @@ function calculateVisibility(stopat)
 	for (var g = 0; g < level.guards.length; g++) 
 	{
 		var o = new PIXI.Point(parseInt(level.guards[g].position.x), parseInt(level.guards[g].position.y));
-		
+		//var o = level.guards[g].position;
 		debugGraphics.lineStyle(1, 0xFFFFFF);
 
 	    var endpoints = [];
@@ -48,7 +48,30 @@ function calculateVisibility(stopat)
 		    }
 	    };
 
-	    endpoints.sort(function(a,b){return a.angle - b.angle});
+	    endpoints.sort(function(a,b){
+
+	    	if(a.angle - b.angle == 0)
+	    	{
+	    		 var l1 = Math.sqrt(Math.pow(o.x - a.x, 2) + Math.pow(o.y - a.y, 2));
+	    		 var l2 = Math.sqrt(Math.pow(o.x - b.x, 2) + Math.pow(o.y - b.y, 2));
+
+	    		 if(a.angle > Math.PI && a.angle < Math.PI * 2.0)
+					return l2 - l1;
+				else
+				{
+					 var angle1 = Math.atan2(a.e1.y, a.e1.x) + Math.PI;
+					 var angle2 = Math.atan2(a.e2.y, a.e2.x) + Math.PI;
+					// console.log("original" + a.angle + "1: " + angle1 + " 2: " + angle2);
+					if(a.angle == Math.PI && angle1 <= a.angle && angle2 <= a.angle)
+					{
+						return l2 - l1;
+					}
+					return l1 - l2;
+				}
+	    	}
+	    	return a.angle - b.angle;
+
+	    });
 
 	    var status = [];
 	    var lastVertex;
@@ -92,7 +115,10 @@ function calculateVisibility(stopat)
 					var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
 					//console.log("Add : ? " + difference);
 					//if(difference < -Math.PI || difference > 0)
-					if((neighbourangle < Math.PI && p.angle > Math.PI && neighbourangle + Math.PI * 2 > p.angle && neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
+					if((neighbourangle < Math.PI && 
+						p.angle > Math.PI && 
+						neighbourangle + Math.PI * 2 > p.angle && 
+						neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
 						(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
 					{
 						//console.log("wall added");

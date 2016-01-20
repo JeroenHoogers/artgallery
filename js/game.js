@@ -16,6 +16,8 @@ var shadowMask = new PIXI.RenderTexture(renderer, 1280, 720);
 var shadowMaskGraphics = new PIXI.Graphics();
 var shadowMaskSprite = new PIXI.Sprite(shadowMask);
 
+var hud = new PIXI.Container();
+
 var guardTexture = new PIXI.RenderTexture(renderer, 30, 30);
 var level = {};
 
@@ -25,6 +27,7 @@ var debug = false;
 var visibilityPolygon;
 
 var moveplayer = new Vector(0, 0);
+var useKeydown = false;
 
 var starttime = null;
 
@@ -52,7 +55,7 @@ stage.on("mouseup", mouseEventHandler);
 
 var lastframe;
 var playerspeed = 200;
-var guardspeed = 120;
+var guardspeed = 50;
 
 initialize();
 
@@ -68,11 +71,13 @@ function initialize()
 	stage.addChild(floorSprite);
 
 	stage.addChild(obstacleGraphics);
+	stage.addChild(galleryGraphics);
+	stage.addChild(wallSprite);
+	stage.addChild(wallGraphics);
+
 	stage.addChild(shadowGraphics);
 
-	stage.addChild(galleryGraphics);
-	stage.addChild(wallGraphics);
-	stage.addChild(wallSprite);
+
 	stage.addChild(guardGraphics);
 	//stage.addChild(guardGraphics);
 	stage.addChild(playerGraphics);
@@ -85,84 +90,102 @@ function initialize()
 
 	wallSprite.mask = wallGraphics;
 
+	// Draw HUD
+	var titleText = new PIXI.Text("Art Gallery Heist", {font:"30px Goudy Old Style", fill:"white", stroke:"gray", strokeThickness: 4});
+	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"gray", strokeThickness: 3});
+	var currentText = new PIXI.Text("Current: ", {font:"20px Arial", fill:"white", stroke:"gray", strokeThickness: 3});
+	var targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#ffFF99", stroke:"gray", strokeThickness: 2});
+	var currentMoneyText = new PIXI.Text("$2000,- ", {font:"22px Arial", fill:"gold", stroke:"gray", strokeThickness: 2});
+	titleText.position = new PIXI.Point(0, 0);
+	targetText.position = new PIXI.Point(1000, 0);
+	currentText.position = new PIXI.Point(800, 0);
+	targetMoneyText.position = new PIXI.Point(80, 0);
+	currentMoneyText.position = new PIXI.Point(80, 0);
+	hud.addChild(titleText);
+	hud.addChild(targetText);
+	//hud.addChild(currentText);
+	targetText.addChild(targetMoneyText);
+	//currentText.addChild(currentMoneyText);
+	stage.addChild(hud);
+
 	// Load the gallery
 	loadlevel();
 }
 
 function loadlevel()
 {
-	level.gallery = new PIXI.Polygon([
-		new PIXI.Point(50,20),
-		new PIXI.Point(700,140),
-		new PIXI.Point(1200,150),
-		new PIXI.Point(1000,585),
-		new PIXI.Point(830,605),
-		new PIXI.Point(700,350),
-		new PIXI.Point(500,600),
-		new PIXI.Point(470,540),
-		new PIXI.Point(100,650),
-		new PIXI.Point(140,230)
-	])
+	// level.gallery = new PIXI.Polygon([
+	// 	new PIXI.Point(50,20),
+	// 	new PIXI.Point(700,140),
+	// 	new PIXI.Point(1200,150),
+	// 	new PIXI.Point(1000,585),
+	// 	new PIXI.Point(830,605),
+	// 	new PIXI.Point(700,350),
+	// 	new PIXI.Point(500,600),
+	// 	new PIXI.Point(470,540),
+	// 	new PIXI.Point(100,650),
+	// 	new PIXI.Point(140,230)
+	// ])
 
-	level.holes = [
-		new PIXI.Polygon([
-			new PIXI.Point(290,250),
-			new PIXI.Point(400,230),
-			new PIXI.Point(450,350),
-			new PIXI.Point(300,420)]
-		),
-		new PIXI.Polygon([
-			new PIXI.Point(850,250),
-			new PIXI.Point(940,310),
-			new PIXI.Point(780,340),
-			new PIXI.Point(750,310)]
-		)
-	];
+	// level.holes = [
+	// 	new PIXI.Polygon([
+	// 		new PIXI.Point(290,250),
+	// 		new PIXI.Point(400,230),
+	// 		new PIXI.Point(450,350),
+	// 		new PIXI.Point(300,420)]
+	// 	),
+	// 	new PIXI.Polygon([
+	// 		new PIXI.Point(850,250),
+	// 		new PIXI.Point(940,310),
+	// 		new PIXI.Point(780,340),
+	// 		new PIXI.Point(750,310)]
+	// 	)
+	// ];
 
-	level.obstacles = [
-		new PIXI.Polygon([
-			new PIXI.Point(570,200),
-			new PIXI.Point(680,260),
-			new PIXI.Point(530,340)
-		])
-	];
+	// level.obstacles = [
+	// 	new PIXI.Polygon([
+	// 		new PIXI.Point(570,200),
+	// 		new PIXI.Point(680,260),
+	// 		new PIXI.Point(530,340)
+	// 	])
+	// ];
 
-	level.paintings = [
-		{
-			position: new PIXI.Point(400,100),
-			value: 1000
-		},
-		{
-			position: new PIXI.Point(600,100),
-			value: 500
-		}
-	];
+	// level.paintings = [
+	// 	{
+	// 		position: new PIXI.Point(400,100),
+	// 		value: 1000
+	// 	},
+	// 	{
+	// 		position: new PIXI.Point(600,100),
+	// 		value: 500
+	// 	}
+	// ];
 
-	level.guards = [
-		{
-			position: new PIXI.Point(500,300),
-			guardpath: [
-				new PIXI.Point(500,250),
-				new PIXI.Point(350,150),
-				new PIXI.Point(250,150),
-				new PIXI.Point(700,140),
-				new PIXI.Point(820,190),
-				new PIXI.Point(700,140),
-				new PIXI.Point(500,150)
-			]
-		}
-		//,
-		// {
-		// 	position: new PIXI.Point(960,300),
-		// 	guardpath: []
-		// }
-	];
+	// level.guards = [
+	// 	{
+	// 		position: new PIXI.Point(500,300),
+	// 		guardpath: [
+	// 			new PIXI.Point(500,250),
+	// 			new PIXI.Point(350,150),
+	// 			new PIXI.Point(250,150),
+	// 			new PIXI.Point(700,140),
+	// 			new PIXI.Point(820,190),
+	// 			new PIXI.Point(700,140),
+	// 			new PIXI.Point(500,150)
+	// 		]
+	// 	}
+	// 	//,
+	// 	// {
+	// 	// 	position: new PIXI.Point(960,300),
+	// 	// 	guardpath: []
+	// 	// }
+	// ];
 
-	level.player = {position: new PIXI.Point(900,500)};
+	// level.player = {position: new PIXI.Point(900,500)};
 
 	level = new Level();
-	level.load("level2");
-	
+	level.load("level3");
+
 	guardGraphics.clear();
 	guardGraphics.lineStyle(2, 0x990000, 1);
 	guardGraphics.beginFill(0xff0000);
@@ -180,12 +203,14 @@ function loadlevel()
 
 		var alertedSprite = new PIXI.Sprite(alertedTexture);
 		alertedSprite.anchor.x = 0.5;
-		alertedSprite.anchor.y = 1.5;
+		alertedSprite.anchor.y = 2.0;
 		alertedSprite.visible = false;
 
 		var lightSprite = new PIXI.Sprite(lightTexture);
 		lightSprite.anchor.x = 0.5;
 		lightSprite.anchor.y = 0.5;
+
+		var alertedGraphics = new PIXI.Graphics();
 
 		level.guards[i].container = new PIXI.Container();
 		level.guards[i].sprite = guardSprite;
@@ -194,6 +219,8 @@ function loadlevel()
 		level.guards[i].light = lightSprite;
 		level.guards[i].visibility = new PIXI.Polygon();
 		level.guards[i].pathindex = 0;
+		level.guards[i].alertedRatio = 0.1;
+		level.guards[i].alertedMeter = alertedGraphics;
 
 		level.guards[i].light.mask = visibilityMask;
 
@@ -201,6 +228,7 @@ function loadlevel()
 
 		level.guards[i].container.addChild(level.guards[i].light);
 		level.guards[i].container.addChild(level.guards[i].sprite);
+		level.guards[i].container.addChild(level.guards[i].alertedMeter);
 		level.guards[i].container.addChild(level.guards[i].alertedIndicator);
 	}
 
@@ -211,7 +239,7 @@ function loadlevel()
 
 	// Draw gallery walls
 	wallGraphics.clear();
-	wallGraphics.lineStyle(10, 0xFFFFFF, 1);
+	wallGraphics.lineStyle(8, 0xFFFFFF, 1);
 	wallGraphics.drawPolygon(level.gallery.points);
 
 	// Draw holes
@@ -221,11 +249,9 @@ function loadlevel()
 		galleryGraphics.drawPolygon(level.holes[i].points);
 		galleryGraphics.endFill();
 
-		wallGraphics.lineStyle(5, 0xFFFFFF, 1);
+		wallGraphics.lineStyle(8, 0xFFFFFF, 1);
 		wallGraphics.drawPolygon(level.holes[i].points);
 	}
-
-
 
 	// Draw obstacles
 	obstacleGraphics.clear();
@@ -237,7 +263,7 @@ function loadlevel()
 
 	// Draw shadows
 	shadowGraphics.clear();
-	shadowGraphics.beginFill(0x000000, 0.3);
+	shadowGraphics.beginFill(0x000000, 0.2);
 	shadowGraphics.drawPolygon(level.gallery.points);
 	shadowGraphics.endFill();
 	shadowGraphics.mask = shadowMaskSprite;
@@ -271,7 +297,10 @@ function draw()
 	{
 		var g = level.guards[i];
 
-		// Draw guards
+		// Draw guard alerted meter
+		g.alertedMeter.clear();
+		g.alertedMeter.lineStyle(5, 0xff0000, 0.5);
+		g.alertedMeter.arc(0,0, 20, (Math.PI * 2.0) * g.alertedRatio, 0);
 		// guardGraphics.lineStyle(1, 0x000000, 1);
 		// guardGraphics.beginFill(0xff0000);
 		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
