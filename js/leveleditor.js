@@ -19,6 +19,7 @@ var creategallery = false;
 var newHole = false;
 var createguards = false;
 var createpath = false;
+var createspawn = false;
 var createplayer = false;
 var createobstacle = false;
 var createpainting = false;
@@ -29,7 +30,7 @@ var pointarray = [];
 var pointselected = -1;
 var obstacleselected = -1;
 var guardselected = -1;
-var paintingbeginpoint = -1;
+var beginpoint = -1;
 
 var starttime;
 var lastframe;
@@ -46,6 +47,7 @@ var guardGraphics = new PIXI.Graphics();
 var obstacleGraphics = new PIXI.Graphics();
 var coverGraphics = new PIXI.Graphics();
 var paintingGraphics = new PIXI.Graphics();
+var spawnGraphics = new PIXI.Graphics();
 
 galleryMask.beginFill(0);
 galleryMask.drawPolygon(level.gallery.points);
@@ -58,9 +60,10 @@ stage.addChild(coverGraphics);
 stage.addChild(galleryGraphics);
 stage.addChild(patrolGraphics);
 stage.addChild(wallgraphics);
-stage.addChild(pointgraphics);
-stage.addChild(guardGraphics);
+stage.addChild(spawnGraphics);
 stage.addChild(paintingGraphics);
+stage.addChild(guardGraphics);
+stage.addChild(pointgraphics);
 
 floorSprite.mask = galleryMask;
 
@@ -163,6 +166,7 @@ function CreateScene(scene)
 	createobstacle = false;
 	createcover = false;
 	createpainting = false;
+	createspawn = false;
 	switch(scene){
 		case 1:
 			pointarray = level.gallery.points;
@@ -191,20 +195,29 @@ function CreateScene(scene)
 			break;
 
 		case 5:
-			createguards = true;
+			console.log("createspawn");
+			if(beginpoint == 0)
+				beginpoint = 1;
+			else if(beginpoint == -1)
+				beginpoint = 0;
+			createspawn = true;
 			break;
 
 		case 6:
-			createpath = true;
+			createguards = true;
 			break;
 
 		case 7:
-			createplayer = true;
+			createpath = true;
 			break;
 
 		case 8:
-			paintingbeginpoint = -1;
+			createplayer = true;
+			break;
+
+		case 9:
 			createpainting = true;
+			beginpoint = -1;
 		default:
 			break;
 	}
@@ -250,6 +263,7 @@ function mouseEventHandler(event)
 				createobstacle = false;
 				createcover = false;
 				createpainting = false;	
+				createspawn = false;
 				pointselected = i;
 			}
 		};
@@ -268,6 +282,7 @@ function mouseEventHandler(event)
 					createobstacle = true;
 					createcover = false;
 					createpainting = false;
+					createspawn = false;
 					pointselected = j;
 					obstacleselected = i;
 				}
@@ -288,6 +303,7 @@ function mouseEventHandler(event)
 					createobstacle = false;
 					createcover = false;
 					createpainting = false;
+					createspawn = false;
 					pointselected = j;
 					obstacleselected = i;
 				}
@@ -308,10 +324,47 @@ function mouseEventHandler(event)
 					createobstacle = false;
 					createcover = true;
 					createpainting = false;
+					createspawn = false;
 					pointselected = j;
 					obstacleselected = i;
 				}
 			};
+		};
+
+		//Check whether a spawn point is selected
+		for (var j = 0; j < level.start.points.length; j+=2) {
+			if (level.start.points[j] <= position.x + 10 && level.start.points[j] >= position.x - 10 && 
+				level.start.points[j+1] <= position.y + 10 && level.start.points[j+1] >= position.y - 10)
+			{
+				pointarray = level.start.points;
+				creategallery = false;
+				createguards = false;
+				newHole = false;
+				createplayer = false;
+				createobstacle = false;
+				createcover = false;
+				createpainting = false;
+				createspawn = true;
+				beginpoint = 0;
+				pointselected = j;
+			}
+		};
+		for (var j = 0; j < level.finish.points.length; j+=2) {
+			if (level.finish.points[j] <= position.x + 10 && level.finish.points[j] >= position.x - 10 && 
+				level.finish.points[j+1] <= position.y + 10 && level.finish.points[j+1] >= position.y - 10)
+			{
+				pointarray = level.finish.points;
+				creategallery = false;
+				createguards = false;
+				newHole = false;
+				createplayer = false;
+				createobstacle = false;
+				createcover = false;
+				createpainting = false;
+				createspawn = true;
+				beginpoint = 1;
+				pointselected = j;
+			}
 		};
 
 		//Check whether a guard is selected
@@ -335,6 +388,7 @@ function mouseEventHandler(event)
 				createobstacle = false;
 				createcover = false;
 				createpainting = false;
+				createspawn = false;
 			}
 		};
 		//Check whether a painting point is selected
@@ -351,7 +405,8 @@ function mouseEventHandler(event)
 				createobstacle = false;
 				createcover = false;
 				createpainting = true;
-				paintingbeginpoint = 0;
+				createspawn = false;
+				beginpoint = 0;
 				obstacleselected = i;
 			}
 			else if (level.paintings[i].end.x <= position.x + 10 && level.paintings[i].end.x >= position.x - 10 && 
@@ -365,7 +420,8 @@ function mouseEventHandler(event)
 				createobstacle = false;
 				createcover = false;
 				createpainting = true;
-				paintingbeginpoint = 1;
+				createspawn = false;
+				beginpoint = 1;
 				obstacleselected = i;
 			}
 		};
@@ -386,6 +442,7 @@ function mouseEventHandler(event)
 					createobstacle = false;
 					createcover = false;
 					createpainting = false;
+					createspawn = false;
 					pointselected = j;
 				}
 			};
@@ -403,6 +460,7 @@ function mouseEventHandler(event)
 			createobstacle = false;
 			createcover = false;
 			createpainting = false;
+			createspawn = false;
 		}
 
 		if(pointselected < 0)
@@ -418,7 +476,7 @@ function mouseEventHandler(event)
 			guardselected = level.guards.length - 1;
 		}
 
-		if(createpainting && paintingbeginpoint == -1)
+		if(createpainting && beginpoint == -1)
 		{
 			if(rad_Painting_High.checked)
 				level.paintings.push({begin : new PIXI.Point(), end : new PIXI.Point(), value : 2000});
@@ -428,7 +486,7 @@ function mouseEventHandler(event)
 				level.paintings.push({begin : new PIXI.Point(), end : new PIXI.Point(), value : 500});
 			var paintingAmount = level.paintings.length;
 			obstacleselected = paintingAmount - 1;
-			paintingbeginpoint = 0;
+			beginpoint = 0;
 		}
 
 		mousedown = true;
@@ -439,15 +497,15 @@ function mouseEventHandler(event)
 	else if(event.type =="mouseup")
 	{
 		mousedown = false;
-		if(createpainting && paintingbeginpoint == 0)
-			paintingbeginpoint = 1;
-		else if(createpainting && paintingbeginpoint == 1)
-			paintingbeginpoint = -1;
+		if(createpainting && beginpoint == 0)
+			beginpoint = 1;
+		else if(createpainting && beginpoint == 1)
+			beginpoint = -1;
 	}
 	
 	if(mousedown)
 	{
-		if((creategallery || newHole || createobstacle || createcover) && snappoints)
+		if((creategallery || newHole || createobstacle || createcover || createspawn) && snappoints)
 		{
 			//Snap with gallery walls
 			for (var i = 0; i < level.gallery.points.length; i+=2) {
@@ -507,6 +565,30 @@ function mouseEventHandler(event)
 					}
 				}
 			};
+			for (var i = 0; i < level.start.points.length; i+=2) {
+				if(pointselected < 0 && (i >= pointarray.length - 2 && createspawn))
+					break;
+				if (level.start.points[i] <= position.x + 20 && level.start.points[i] >= position.x - 20 && (i != pointselected || !createspawn))
+				{
+					position.x = level.start.points[i];
+				}
+				if (level.start.points[i+1] <= position.y + 20 && level.start.points[i+1] >= position.y - 20 && (i != pointselected || !createspawn))
+				{
+					position.y = level.start.points[i+1];
+				}
+			};
+			for (var i = 0; i < level.finish.points.length; i+=2) {
+				if(pointselected < 0 && (i >= pointarray.length - 2 && createspawn))
+					break;
+				if (level.finish.points[i] <= position.x + 20 && level.finish.points[i] >= position.x - 20 && (i != pointselected || !createspawn))
+				{
+					position.x = level.finish.points[i];
+				}
+				if (level.finish.points[i+1] <= position.y + 20 && level.finish.points[i+1] >= position.y - 20 && (i != pointselected || !createspawn))
+				{
+					position.y = level.finish.points[i+1];
+				}
+			}
 		}
 		if(pointselected < 0) //Selected point OR last point
 		{
@@ -519,6 +601,7 @@ function mouseEventHandler(event)
 			pointarray[pointselected] = Math.floor(position.x);
 			pointarray[pointselected+1] = Math.floor(position.y);
 		}
+		console.log(pointarray);
 		setpoints(pointarray);
 
 		if(guardselected >= 0 && !createpath && level.gallery.contains(position.x, position.y)){ //Change current guard position
@@ -527,10 +610,15 @@ function mouseEventHandler(event)
 			level.guards[guardselected].guardpath.points[0] = Math.floor(position.x);
 			level.guards[guardselected].guardpath.points[1] = Math.floor(position.y);
 		}
-		else if(createplayer && level.gallery.contains(position.x, position.y)){ //Change player position
+		else if(createplayer && (level.gallery.contains(position.x, position.y) || level.start.contains(position.x, position.y))) //Change player position
+		{
 			var candraw = true;
 			for (var i = 0; i < level.holes.length; i++) {
 				if (level.holes[i].contains(position.x, position.y))
+					candraw = false;
+			};
+			for (var i = 0; i < level.obstacles.length; i++) {
+				if (level.obstacles[i].contains(position.x, position.y))
 					candraw = false;
 			};
 			if(candraw)
@@ -543,14 +631,17 @@ function mouseEventHandler(event)
 				if (level.holes[i].contains(position.x, position.y))
 					candraw = false;
 			};
+			for (var i = 0; i < level.obstacles.length; i++) {
+				if (level.obstacles[i].contains(position.x, position.y))
+					candraw = false;
+			};
 			if(candraw)
 			{
-				console.log('check paint :' + paintingbeginpoint);
-				if(paintingbeginpoint == 0)
+				if(beginpoint == 0)
 				{
 					level.paintings[obstacleselected].begin = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
 				}
-				else if(paintingbeginpoint == 1)
+				else if(beginpoint == 1)
 				{
 					level.paintings[obstacleselected].end = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
 				}
@@ -563,7 +654,6 @@ function mouseEventHandler(event)
 function setpoints(points)
 {
 	// new gallery point position or position altered
-	console.log('check');
 	if(creategallery) 
 	{
 		level.gallery = new PIXI.Polygon(points);
@@ -588,18 +678,28 @@ function setpoints(points)
 	// change current cover points to new array
 	else if(createcover)
 	{
-		console.log('cover');
 		if(points.length > 0)
 			level.covers[obstacleselected] = new PIXI.Polygon(points);
 		else
 			level.covers.splice(obstacleselected, 1);
+	}
+	// change start or finish points to new array
+	else if(createspawn)
+	{
+		if(beginpoint == 0)
+		{
+			level.start = new PIXI.Polygon(points);
+		}
+		else if(beginpoint == 1)
+		{
+			level.finish = new PIXI.Polygon(points);
+		}
 	}
 	// change current guard path points to new array
 	else if(guardselected >= 0 && createpath && points.length >= 2){
 		level.guards[guardselected].position.x = Math.floor(points[0]);
 		level.guards[guardselected].position.y = Math.floor(points[1]);
 		level.guards[guardselected].guardpath = new PIXI.Polygon(points);
-		console.log(level.guards[guardselected].guardpath);
 	}
 }
 
@@ -615,6 +715,7 @@ function redraw()
 	obstacleGraphics.clear();
 	paintingGraphics.clear();
 	coverGraphics.clear();
+	spawnGraphics.clear();
 
 	//draw Gallery
 	galleryMask.beginFill(0);
@@ -639,14 +740,19 @@ function redraw()
 		obstacleGraphics.lineStyle(2, 0xFFFFFF, 1);
 		obstacleGraphics.drawPolygon(level.obstacles[i].points);
 	};
-	//draw Covers
-	for (var i = 0; i < level.covers.length; i++) {
-		coverGraphics.beginFill(0xDDDDDD);
-		coverGraphics.drawPolygon(level.covers[i].points);
-		coverGraphics.endFill();
-		coverGraphics.lineStyle(5, 0xDDDDDD, 1);
-		coverGraphics.drawPolygon(level.covers[i].points);
-	};
+	//draw spawn
+	spawnGraphics.beginFill(0x00ff00);
+	spawnGraphics.drawPolygon(level.start.points);
+	spawnGraphics.endFill();
+	spawnGraphics.lineStyle(5, 0x00ff00, 1);
+	spawnGraphics.drawPolygon(level.start.points);
+	spawnGraphics.beginFill(0xff0000);
+	spawnGraphics.drawPolygon(level.finish.points);
+	spawnGraphics.endFill();
+	spawnGraphics.lineStyle(5, 0xffffff, 1);
+	spawnGraphics.drawPolygon(level.finish.points);
+
+
 	//draw Paintings
 	for (var i = 0; i < level.paintings.length; i++) {
 		if(level.paintings[i].end.x != 0)
@@ -683,6 +789,12 @@ function redraw()
 			pointgraphics.drawCircle(level.covers[i].points[j], level.covers[i].points[j+1], 5);
 		};
 	};
+	for (var j = 0; j < level.start.points.length; j+=2) {
+		pointgraphics.drawCircle(level.start.points[j], level.start.points[j+1], 5);
+	};
+	for (var j = 0; j < level.finish.points.length; j+=2) {
+		pointgraphics.drawCircle(level.finish.points[j], level.finish.points[j+1], 5);
+	};
 	for (var i = 0; i < level.paintings.length; i++) {
 		pointgraphics.drawCircle(level.paintings[i].begin.x, level.paintings[i].begin.y, 5);
 		if(level.paintings[i].end.x != 0)
@@ -710,5 +822,12 @@ function redraw()
 		patrolGraphics.lineStyle(5, 0x0000FF, 1);
 		patrolGraphics.drawPolygon(level.guards[guardselected].guardpath.points);
 	}
-
+	//draw Covers
+	for (var i = 0; i < level.covers.length; i++) {
+		coverGraphics.beginFill(0xDDDDDD);
+		coverGraphics.drawPolygon(level.covers[i].points);
+		coverGraphics.endFill();
+		coverGraphics.lineStyle(5, 0xDDDDDD, 1);
+		coverGraphics.drawPolygon(level.covers[i].points);
+	};
 }
