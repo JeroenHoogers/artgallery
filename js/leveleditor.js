@@ -512,11 +512,11 @@ function mouseEventHandler(event)
 				for (var i = 0; i < level.obstacles[j].points.length; i+=2) {
 					if(pointselected < 0 && (i >= pointarray.length - 2 && createobstacle))
 						break;
-					if (level.obstacles[j].points[i] <= position.x + 20 && level.obstacles[j].points[i] >= position.x - 20 && (i != pointselected || !createobstacle))
+					if (level.obstacles[j].points[i] <= position.x + 10 && level.obstacles[j].points[i] >= position.x - 10 && (i != pointselected || !createobstacle))
 					{
 						position.x = level.obstacles[j].points[i];
 					}
-					if (level.obstacles[j].points[i+1] <= position.y + 20 && level.obstacles[j].points[i+1] >= position.y - 20 && (i != pointselected || !createobstacle))
+					if (level.obstacles[j].points[i+1] <= position.y + 10 && level.obstacles[j].points[i+1] >= position.y - 10 && (i != pointselected || !createobstacle))
 					{
 						position.y = level.obstacles[j].points[i+1];
 					}
@@ -527,11 +527,11 @@ function mouseEventHandler(event)
 				for (var i = 0; i < level.covers[j].points.length; i+=2) {
 					if(pointselected < 0 && (i >= pointarray.length - 2 && createcover))
 						break;
-					if (level.covers[j].points[i] <= position.x + 20 && level.covers[j].points[i] >= position.x - 20 && (i != pointselected || !createcover))
+					if (level.covers[j].points[i] <= position.x + 10 && level.covers[j].points[i] >= position.x - 10 && (i != pointselected || !createcover))
 					{
 						position.x = level.covers[j].points[i];
 					}
-					if (level.covers[j].points[i+1] <= position.y + 20 && level.covers[j].points[i+1] >= position.y - 20 && (i != pointselected || !createcover))
+					if (level.covers[j].points[i+1] <= position.y + 10 && level.covers[j].points[i+1] >= position.y - 10 && (i != pointselected || !createcover))
 					{
 						position.y = level.covers[j].points[i+1];
 					}
@@ -540,11 +540,11 @@ function mouseEventHandler(event)
 			for (var i = 0; i < level.start.points.length; i+=2) {
 				if(pointselected < 0 && (i >= pointarray.length - 2 && createspawn))
 					break;
-				if (level.start.points[i] <= position.x + 20 && level.start.points[i] >= position.x - 20 && (i != pointselected || !createspawn))
+				if (level.start.points[i] <= position.x + 10 && level.start.points[i] >= position.x - 10 && (i != pointselected || !createspawn))
 				{
 					position.x = level.start.points[i];
 				}
-				if (level.start.points[i+1] <= position.y + 20 && level.start.points[i+1] >= position.y - 20 && (i != pointselected || !createspawn))
+				if (level.start.points[i+1] <= position.y + 10 && level.start.points[i+1] >= position.y - 10 && (i != pointselected || !createspawn))
 				{
 					position.y = level.start.points[i+1];
 				}
@@ -552,11 +552,11 @@ function mouseEventHandler(event)
 			for (var i = 0; i < level.finish.points.length; i+=2) {
 				if(pointselected < 0 && (i >= pointarray.length - 2 && createspawn))
 					break;
-				if (level.finish.points[i] <= position.x + 20 && level.finish.points[i] >= position.x - 20 && (i != pointselected || !createspawn))
+				if (level.finish.points[i] <= position.x + 10 && level.finish.points[i] >= position.x - 10 && (i != pointselected || !createspawn))
 				{
 					position.x = level.finish.points[i];
 				}
-				if (level.finish.points[i+1] <= position.y + 20 && level.finish.points[i+1] >= position.y - 20 && (i != pointselected || !createspawn))
+				if (level.finish.points[i+1] <= position.y + 10 && level.finish.points[i+1] >= position.y - 10 && (i != pointselected || !createspawn))
 				{
 					position.y = level.finish.points[i+1];
 				}
@@ -565,11 +565,11 @@ function mouseEventHandler(event)
 			for (var i = 0; i < level.gallery.points.length; i+=2) {
 				if(pointselected < 0 && (i >= pointarray.length - 2 && creategallery))
 					break;
-				if (level.gallery.points[i] <= position.x + 20 && level.gallery.points[i] >= position.x - 20 && (i != pointselected || !creategallery))
+				if (level.gallery.points[i] <= position.x + 10 && level.gallery.points[i] >= position.x - 10 && (i != pointselected || !creategallery))
 				{
 					position.x = level.gallery.points[i];
 				}
-				if (level.gallery.points[i+1] <= position.y + 20 && level.gallery.points[i+1] >= position.y - 20 && (i != pointselected || !creategallery))
+				if (level.gallery.points[i+1] <= position.y + 10 && level.gallery.points[i+1] >= position.y - 10 && (i != pointselected || !creategallery))
 				{
 					position.y = level.gallery.points[i+1];
 				}
@@ -579,11 +579,11 @@ function mouseEventHandler(event)
 				for (var i = 0; i < level.holes[j].points.length; i+=2) {
 					if(pointselected < 0 && (i >= pointarray.length - 2 && newHole))
 						break;
-					if (level.holes[j].points[i] <= position.x + 20 && level.holes[j].points[i] >= position.x - 20 && (i != pointselected || !newHole))
+					if (level.holes[j].points[i] <= position.x + 10 && level.holes[j].points[i] >= position.x - 10 && (i != pointselected || !newHole))
 					{
 						position.x = level.holes[j].points[i];
 					}
-					if (level.holes[j].points[i+1] <= position.y + 20 && level.holes[j].points[i+1] >= position.y - 20 && (i != pointselected || !newHole))
+					if (level.holes[j].points[i+1] <= position.y + 10 && level.holes[j].points[i+1] >= position.y - 10 && (i != pointselected || !newHole))
 					{
 						position.y = level.holes[j].points[i+1];
 					}

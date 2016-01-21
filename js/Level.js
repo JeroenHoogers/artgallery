@@ -3,6 +3,7 @@ function Level()
 	this.gallery = new PIXI.Polygon([]);
 	this.start =  new PIXI.Polygon([]);
 	this.finish = new PIXI.Polygon([]);
+	this.target = 5000;
 	this.holes = [];
 	this.obstacles = [];
 	this.covers = [];
@@ -21,6 +22,7 @@ Level.prototype.load = function(level)
 Level.prototype.loadJSON = function(level)
 {
 	newlevel = JSON.parse(level);
+	this.target = newlevel.target;
 	this.gallery.points = newlevel.gallery.points;
 	this.start.points = newlevel.start.points;
 	this.finish.points = newlevel.finish.points;
