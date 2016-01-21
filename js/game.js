@@ -1,5 +1,5 @@
 var stage = new PIXI.Container();
-var renderer = PIXI.autoDetectRenderer(1280, 720,{backgroundColor : 0x999999});
+var renderer = PIXI.autoDetectRenderer(1280, 720,{backgroundColor : 0x999999}, false, true);
 renderer.forceFXAA = true;
 document.body.appendChild(renderer.view);
 
@@ -17,6 +17,10 @@ var shadowMaskGraphics = new PIXI.Graphics();
 var shadowMaskSprite = new PIXI.Sprite(shadowMask);
 
 var hud = new PIXI.Container();
+var gameoverMenu = new PIXI.Container();
+var pauseMenu = new PIXI.Container();
+var helpMenu = new PIXI.Container();
+
 
 var guardTexture = new PIXI.RenderTexture(renderer, 30, 30);
 var level = {};
@@ -31,6 +35,13 @@ var useKeydown = false;
 
 var starttime = null;
 
+// Guard parameters
+var detectionTime = 1.0; // seconds
+var cooldownRate = 0.1;
+
+var leftSpawn = false;
+var canFinish = false;
+
 // Create graphics objects
 var galleryGraphics = new PIXI.Graphics();
 var wallGraphics = new PIXI.Graphics();
@@ -42,7 +53,7 @@ var guardGraphics = new PIXI.Graphics();
 
 var shadowGraphics = new PIXI.Graphics();
 var visibilityMask = new PIXI.Graphics();
-
+var miscGraphics = new PIXI.Graphics();
 var debugGraphics = new PIXI.Graphics();
 
 //drawVisibility(guards[0].x, guards[0].y, 0);
@@ -76,8 +87,8 @@ function initialize()
 	stage.addChild(wallGraphics);
 
 	stage.addChild(shadowGraphics);
-
-
+	stage.addChild(miscGraphics);
+	
 	stage.addChild(guardGraphics);
 	//stage.addChild(guardGraphics);
 	stage.addChild(playerGraphics);
@@ -85,13 +96,14 @@ function initialize()
 	stage.addChild(shadowMaskSprite);
 
 	stage.addChild(debugGraphics);
+
 	// Mask the texture with the gallery polygon
 	floorSprite.mask = galleryMask;
 
 	wallSprite.mask = wallGraphics;
 
 	// Draw HUD
-	var titleText = new PIXI.Text("Art Gallery Heist", {font:"30px Goudy Old Style", fill:"white", stroke:"gray", strokeThickness: 4});
+	var titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"gray", strokeThickness: 4});
 	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"gray", strokeThickness: 3});
 	var currentText = new PIXI.Text("Current: ", {font:"20px Arial", fill:"white", stroke:"gray", strokeThickness: 3});
 	var targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#ffFF99", stroke:"gray", strokeThickness: 2});
@@ -184,7 +196,7 @@ function loadlevel()
 	// level.player = {position: new PIXI.Point(900,500)};
 
 	level = new Level();
-	level.load("level3");
+	level.load("level4");
 
 	guardGraphics.clear();
 	guardGraphics.lineStyle(2, 0x990000, 1);
@@ -219,7 +231,7 @@ function loadlevel()
 		level.guards[i].light = lightSprite;
 		level.guards[i].visibility = new PIXI.Polygon();
 		level.guards[i].pathindex = 0;
-		level.guards[i].alertedRatio = 0.1;
+		level.guards[i].alertedRatio = 0;
 		level.guards[i].alertedMeter = alertedGraphics;
 
 		level.guards[i].light.mask = visibilityMask;
@@ -227,8 +239,8 @@ function loadlevel()
 		stage.addChild(level.guards[i].container);
 
 		level.guards[i].container.addChild(level.guards[i].light);
-		level.guards[i].container.addChild(level.guards[i].sprite);
 		level.guards[i].container.addChild(level.guards[i].alertedMeter);
+		level.guards[i].container.addChild(level.guards[i].sprite);
 		level.guards[i].container.addChild(level.guards[i].alertedIndicator);
 	}
 
@@ -256,9 +268,9 @@ function loadlevel()
 	// Draw obstacles
 	obstacleGraphics.clear();
 	for (var i = 0; i < level.obstacles.length; i++) {
-		obstacleGraphics.beginFill(0xFFFFFF);
-		obstacleGraphics.drawPolygon(level.obstacles[i].points);
-		obstacleGraphics.endFill();
+		wallGraphics.beginFill(0xFFFFFF);
+		wallGraphics.drawPolygon(level.obstacles[i].points);
+		wallGraphics.endFill();
 	}
 
 	// Draw shadows
@@ -267,6 +279,19 @@ function loadlevel()
 	shadowGraphics.drawPolygon(level.gallery.points);
 	shadowGraphics.endFill();
 	shadowGraphics.mask = shadowMaskSprite;
+
+	// Draw gallery start and endpoints
+	miscGraphics.clear();
+
+	wallGraphics.drawPolygon(level.start.points);
+	miscGraphics.beginFill(0x0000FF, 0.3);
+	miscGraphics.drawPolygon(level.start.points);
+	miscGraphics.endFill();
+
+	wallGraphics.drawPolygon(level.finish.points);
+	miscGraphics.beginFill(0x00FF00, 0.3);
+	miscGraphics.drawPolygon(level.finish.points);
+	miscGraphics.endFill();
 }
 
 // Draw function, called every frame
@@ -299,8 +324,11 @@ function draw()
 
 		// Draw guard alerted meter
 		g.alertedMeter.clear();
-		g.alertedMeter.lineStyle(5, 0xff0000, 0.5);
-		g.alertedMeter.arc(0,0, 20, (Math.PI * 2.0) * g.alertedRatio, 0);
+		//g.alertedMeter.beginFill(0x999999,1);
+		g.alertedMeter.boundsPadding = 0;
+		g.alertedMeter.lineStyle(5, 0xAAAAAA, 1);
+		g.alertedMeter.arc(0, 0, 20, 0, (Math.PI * 2.0) * g.alertedRatio);
+		g.alertedMeter.endFill();
 		// guardGraphics.lineStyle(1, 0x000000, 1);
 		// guardGraphics.beginFill(0xff0000);
 		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
@@ -339,10 +367,26 @@ function update()
 		if(typeof(level.guards[g].visibility) != "undefined" && level.guards[g].visibility.contains(level.player.position.x, level.player.position.y))
 		{
 			level.guards[g].alerted = true;
+			level.guards[g].alertedRatio += deltatime / detectionTime;
+			level.guards[g].alertedRatio = Math.min(1.0, level.guards[g].alertedRatio);
 		}
+		else
+		{
+			level.guards[g].container.position = level.guards[g].position;
+			if(level.guards[g].alertedRatio > 0)
+			{
+				level.guards[g].alertedRatio -= deltatime * cooldownRate;
+				level.guards[g].alertedRatio = Math.max(0.0, level.guards[g].alertedRatio);
+			}
+		}
+
 		level.guards[g].alertedIndicator.visible = level.guards[g].alerted;
 		//level.guards[g].light.position = level.guards[g].position;
-		level.guards[g].container.position = level.guards[g].position;
+		
+
+
+
+		//level.guards[g].alertedRatio += deltatime / detectionTime;
 	
 
 	// TODO: Improve this code and make it work for all guards
@@ -353,9 +397,12 @@ function update()
 			var nextguardposition = new PIXI.Point(level.guards[g].guardpath.points[pathindex], level.guards[g].guardpath.points[pathindex + 1]);
 			//var nextguardposition = new PIXI.Point(level.guards[g].guardpath.points[pathindex + 2], level.guards[g].guardpath.points[pathindex + 3]);
 
-			var lastvisited = new Vector(currentguardposition.x, currentguardposition.y);
+			var currentpos = new Vector(currentguardposition.x, currentguardposition.y);
 			var target = new Vector(nextguardposition.x, nextguardposition.y);
-			var direction = target.sub(lastvisited);
+
+			var distance = currentpos.distanceTo(target);
+			var direction = target.sub(currentpos);
+
 			direction = direction.normalize();
 
 			var nextPosition = new PIXI.Point(
@@ -365,20 +412,8 @@ function update()
 			level.guards[g].position.x = nextPosition.x;
 			level.guards[g].position.y = nextPosition.y;
 
-			// if(level.guards[g].position.x < level.guards[g].guardpath.points[pathindex] - guardspeed * deltatime)
-			// 	level.guards[g].position.x = parseInt(level.guards[g].position.x + guardspeed * deltatime);
-			// else if(level.guards[g].position.x > level.guards[g].guardpath.points[pathindex] + guardspeed * deltatime)
-			// 	level.guards[g].position.x = parseInt(level.guards[g].position.x - guardspeed * deltatime);
-			// else
-			// 	level.guards[g].position.x = level.guards[g].guardpath.points[pathindex];
-			// if(level.guards[g].position.y < level.guards[g].guardpath.points[pathindex + 1])
-			// 	level.guards[g].position.y = parseInt(level.guards[g].position.y + guardspeed * deltatime);
-			// else if(level.guards[g].position.y > level.guards[g].guardpath.points[pathindex + 1] + guardspeed * deltatime)
-			// 	level.guards[g].position.y = parseInt(level.guards[g].position.y - guardspeed * deltatime);
-			// else
-			// 	level.guards[g].position.y = level.guards[g].guardpath.points[pathindex + 1];
-			if(currentguardposition.x >= nextguardposition.x - 10 && currentguardposition.x <= nextguardposition.x + 10
-				&& currentguardposition.y >= nextguardposition.y - 10 && currentguardposition.y <= nextguardposition.y + 10)
+			// Go to the next waypoint if the target is reached
+			if(distance <= guardspeed * deltatime)
 			{
 				level.guards[g].position.x = nextguardposition.x;
 				level.guards[g].position.y = nextguardposition.y;
@@ -392,8 +427,12 @@ function update()
 		level.player.position.x + (playermovement.x * playerspeed * deltatime), 
 		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
+	if(!leftSpawn)
+		leftSpawn = !level.start.contains(level.player.position.x, level.player.position.y);
 
-	if(level.gallery.contains(nextPosition.x, nextPosition.y))
+	if(canFinish)
+
+	if(level.gallery.contains(nextPosition.x, nextPosition.y) || (level.start.contains(nextPosition.x, nextPosition.y) && !leftSpawn))
 	{
 		var collision = false;
 
