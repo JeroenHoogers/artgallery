@@ -216,7 +216,7 @@ function loadlevel()
 		var alertedSprite = new PIXI.Sprite(alertedTexture);
 		alertedSprite.anchor.x = 0.5;
 		alertedSprite.anchor.y = 2.0;
-		alertedSprite.visible = false;
+		alertedSprite.visible = true;
 
 		var lightSprite = new PIXI.Sprite(lightTexture);
 		lightSprite.anchor.x = 0.5;
@@ -235,13 +235,14 @@ function loadlevel()
 		level.guards[i].alertedMeter = alertedGraphics;
 
 		level.guards[i].light.mask = visibilityMask;
+		level.guards[i].alertedMeter.mask = level.guards[i].alertedIndicator;
 
 		stage.addChild(level.guards[i].container);
 
 		level.guards[i].container.addChild(level.guards[i].light);
-		level.guards[i].container.addChild(level.guards[i].alertedMeter);
 		level.guards[i].container.addChild(level.guards[i].sprite);
 		level.guards[i].container.addChild(level.guards[i].alertedIndicator);
+		level.guards[i].container.addChild(level.guards[i].alertedMeter);
 	}
 
 	// Draw gallery mask
@@ -308,7 +309,7 @@ function draw()
 
 	// Draw player
 	playerGraphics.lineStyle(2, 0x000099, 1);
-	playerGraphics.beginFill(0x2222ff);
+	playerGraphics.beginFill(0x2222FF);
 	playerGraphics.drawCircle(level.player.position.x, level.player.position.y, 10);
 	playerGraphics.endFill();
 
@@ -324,31 +325,24 @@ function draw()
 
 		// Draw guard alerted meter
 		g.alertedMeter.clear();
-		//g.alertedMeter.beginFill(0x999999,1);
-		g.alertedMeter.boundsPadding = 0;
-		g.alertedMeter.lineStyle(5, 0xAAAAAA, 1);
-		g.alertedMeter.arc(0, 0, 20, 0, (Math.PI * 2.0) * g.alertedRatio);
+
+		// Draw meter background
+		g.alertedMeter.beginFill(0xCCCCCC,1);
+		g.alertedMeter.drawRect(-25, -g.alertedIndicator.height * 2, 50, g.alertedIndicator.height);
 		g.alertedMeter.endFill();
-		// guardGraphics.lineStyle(1, 0x000000, 1);
-		// guardGraphics.beginFill(0xff0000);
-		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
-		// guardGraphics.endFill();
-		// guardGraphics.lineStyle(1, 0x000000, 1);
-		// guardGraphics.beginFill(0xff0000);
-		// guardGraphics.drawCircle(g.position.x, g.position.y, 10);
-		// guardGraphics.endFill();
+
+		// Draw meter fill
+		g.alertedMeter.beginFill(0xFF0000,1);
+		g.alertedMeter.drawRect(-25, -g.alertedIndicator.height * (1 + g.alertedRatio), 50, g.alertedIndicator.height);
+		g.alertedMeter.endFill();	
 
 		// Add guard visibility to the shadow mask
 		shadowMaskGraphics.beginFill(0x000000, 1);
 		shadowMaskGraphics.drawPolygon(g.visibility);
 		shadowMaskGraphics.endFill();
-
-		// TODO: make guard drawable and add it to the guard
 	};
 
 	shadowMask.render(shadowMaskGraphics);
-
-    
 }
 
 // Update function, called every frame
@@ -380,7 +374,7 @@ function update()
 			}
 		}
 
-		level.guards[g].alertedIndicator.visible = level.guards[g].alerted;
+		level.guards[g].alertedMeter.visible = (level.guards[g].alertedRatio > 0);
 		//level.guards[g].light.position = level.guards[g].position;
 		
 
@@ -429,8 +423,6 @@ function update()
 	);
 	if(!leftSpawn)
 		leftSpawn = !level.start.contains(level.player.position.x, level.player.position.y);
-
-	if(canFinish)
 
 	if(level.gallery.contains(nextPosition.x, nextPosition.y) || (level.start.contains(nextPosition.x, nextPosition.y) && !leftSpawn))
 	{
