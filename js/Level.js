@@ -22,6 +22,8 @@ Level.prototype.loadJSON = function(level)
 {
 	newlevel = JSON.parse(level);
 	this.gallery.points = newlevel.gallery.points;
+	this.start.points = newlevel.start.points;
+	this.finish.points = newlevel.finish.points;
 	for (var i = 0; i < newlevel.holes.length; i++) {
 		this.holes.push(new PIXI.Polygon(newlevel.holes[i].points));
 	};

@@ -507,34 +507,6 @@ function mouseEventHandler(event)
 	{
 		if((creategallery || newHole || createobstacle || createcover || createspawn) && snappoints)
 		{
-			//Snap with gallery walls
-			for (var i = 0; i < level.gallery.points.length; i+=2) {
-				if(pointselected < 0 && (i >= pointarray.length - 2 && creategallery))
-					break;
-				if (level.gallery.points[i] <= position.x + 20 && level.gallery.points[i] >= position.x - 20 && (i != pointselected || !creategallery))
-				{
-					position.x = level.gallery.points[i];
-				}
-				if (level.gallery.points[i+1] <= position.y + 20 && level.gallery.points[i+1] >= position.y - 20 && (i != pointselected || !creategallery))
-				{
-					position.y = level.gallery.points[i+1];
-				}
-			};
-			//Snap with hole walls
-			for (var j = 0; j < level.holes.length; j++) {
-				for (var i = 0; i < level.holes[j].points.length; i+=2) {
-					if(pointselected < 0 && (i >= pointarray.length - 2 && newHole))
-						break;
-					if (level.holes[j].points[i] <= position.x + 20 && level.holes[j].points[i] >= position.x - 20 && (i != pointselected || !newHole))
-					{
-						position.x = level.holes[j].points[i];
-					}
-					if (level.holes[j].points[i+1] <= position.y + 20 && level.holes[j].points[i+1] >= position.y - 20 && (i != pointselected || !newHole))
-					{
-						position.y = level.holes[j].points[i+1];
-					}
-				}
-			};
 			//Snap with obstacle walls
 			for (var j = 0; j < level.obstacles.length; j++) {
 				for (var i = 0; i < level.obstacles[j].points.length; i+=2) {
@@ -589,6 +561,34 @@ function mouseEventHandler(event)
 					position.y = level.finish.points[i+1];
 				}
 			}
+			//Snap with gallery walls
+			for (var i = 0; i < level.gallery.points.length; i+=2) {
+				if(pointselected < 0 && (i >= pointarray.length - 2 && creategallery))
+					break;
+				if (level.gallery.points[i] <= position.x + 20 && level.gallery.points[i] >= position.x - 20 && (i != pointselected || !creategallery))
+				{
+					position.x = level.gallery.points[i];
+				}
+				if (level.gallery.points[i+1] <= position.y + 20 && level.gallery.points[i+1] >= position.y - 20 && (i != pointselected || !creategallery))
+				{
+					position.y = level.gallery.points[i+1];
+				}
+			};
+			//Snap with hole walls
+			for (var j = 0; j < level.holes.length; j++) {
+				for (var i = 0; i < level.holes[j].points.length; i+=2) {
+					if(pointselected < 0 && (i >= pointarray.length - 2 && newHole))
+						break;
+					if (level.holes[j].points[i] <= position.x + 20 && level.holes[j].points[i] >= position.x - 20 && (i != pointselected || !newHole))
+					{
+						position.x = level.holes[j].points[i];
+					}
+					if (level.holes[j].points[i+1] <= position.y + 20 && level.holes[j].points[i+1] >= position.y - 20 && (i != pointselected || !newHole))
+					{
+						position.y = level.holes[j].points[i+1];
+					}
+				}
+			};
 		}
 		if(pointselected < 0) //Selected point OR last point
 		{
@@ -741,15 +741,15 @@ function redraw()
 		obstacleGraphics.drawPolygon(level.obstacles[i].points);
 	};
 	//draw spawn
-	spawnGraphics.beginFill(0x00ff00);
+	spawnGraphics.beginFill(0x00ff00, 0.3);
 	spawnGraphics.drawPolygon(level.start.points);
 	spawnGraphics.endFill();
-	spawnGraphics.lineStyle(5, 0x00ff00, 1);
+	spawnGraphics.lineStyle(5, 0x00ff00, 0.3);
 	spawnGraphics.drawPolygon(level.start.points);
-	spawnGraphics.beginFill(0xff0000);
+	spawnGraphics.beginFill(0xff0000, 0.3);
 	spawnGraphics.drawPolygon(level.finish.points);
 	spawnGraphics.endFill();
-	spawnGraphics.lineStyle(5, 0xffffff, 1);
+	spawnGraphics.lineStyle(5, 0xffffff, 0.3);
 	spawnGraphics.drawPolygon(level.finish.points);
 
 
@@ -824,10 +824,10 @@ function redraw()
 	}
 	//draw Covers
 	for (var i = 0; i < level.covers.length; i++) {
-		coverGraphics.beginFill(0xDDDDDD);
+		coverGraphics.beginFill(0xDDDDDD, 0.3);
 		coverGraphics.drawPolygon(level.covers[i].points);
 		coverGraphics.endFill();
-		coverGraphics.lineStyle(5, 0xDDDDDD, 1);
+		coverGraphics.lineStyle(5, 0xDDDDDD, 0.3);
 		coverGraphics.drawPolygon(level.covers[i].points);
 	};
 }
