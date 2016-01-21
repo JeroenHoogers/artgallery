@@ -36,7 +36,7 @@ var useKeydown = false;
 var starttime = null;
 
 // Guard parameters
-var detectionTime = 1.0; // seconds
+var detectionTime = 0.5; // seconds
 var cooldownRate = 0.1;
 
 var leftSpawn = false;
@@ -47,6 +47,7 @@ var galleryGraphics = new PIXI.Graphics();
 var wallGraphics = new PIXI.Graphics();
 var galleryMask = new PIXI.Graphics();
 var obstacleGraphics = new PIXI.Graphics();
+var paintingGraphics = new PIXI.Graphics();
 
 var playerGraphics = new PIXI.Graphics();
 var guardGraphics = new PIXI.Graphics();
@@ -86,6 +87,7 @@ function initialize()
 	stage.addChild(wallSprite);
 	stage.addChild(wallGraphics);
 
+	stage.addChild(paintingGraphics);
 	stage.addChild(shadowGraphics);
 	stage.addChild(miscGraphics);
 	
@@ -254,6 +256,42 @@ function loadlevel()
 	wallGraphics.clear();
 	wallGraphics.lineStyle(8, 0xFFFFFF, 1);
 	wallGraphics.drawPolygon(level.gallery.points);
+
+	// Draw paintings
+	paintingGraphics.clear();
+	for (var i = 0; i < level.paintings.length; i++) 
+	{
+		var val = level.paintings[i].value;
+		var paintingColor;
+
+		switch (val) {
+			case 500: 	// Bronze
+				paintingColor = 0xCD7F32;
+				break;
+			case 1000: 	// Silver
+				paintingColor = 0xC0C0C0;
+				break;
+			case 2000: 	// Gold
+				paintingColor = 0xFFD700;
+				break;
+		}
+
+		paintingGraphics.lineStyle(10, 0xFFFFFF, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].begin.x, 
+			level.paintings[i].begin.y);
+		paintingGraphics.lineTo(
+			level.paintings[i].end.x, 
+			level.paintings[i].end.y);
+
+		paintingGraphics.lineStyle(8, paintingColor, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].begin.x, 
+			level.paintings[i].begin.y);
+		paintingGraphics.lineTo(
+			level.paintings[i].end.x, 
+			level.paintings[i].end.y);
+	};
 
 	// Draw holes
 	galleryGraphics.clear();
