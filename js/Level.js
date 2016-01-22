@@ -35,7 +35,10 @@ Level.prototype.loadJSON = function(level)
 	for (var i = 0; i < newlevel.covers.length; i++) {
 		this.covers.push(new PIXI.Polygon(newlevel.covers[i].points));
 	};
-	this.paintings = newlevel.paintings;
+	for (var i = 0; i < newlevel.paintings.length; i++) {
+		var currentpainting = newlevel.paintings[i].painting;
+		this.paintings.push({value : newlevel.paintings[i].value, painting : new LineSegment(currentpainting.x1, currentpainting.y1, currentpainting.x2, currentpainting.y2)});
+	};
 	this.player = newlevel.player;
 	for (var i = 0; i < newlevel.guards.length; i++) {
 		this.guards.push({position : newlevel.guards[i].position,
