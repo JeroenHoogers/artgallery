@@ -110,4 +110,13 @@ LineSegment.prototype.intersects = function (ray)
     return output;   
 };
 
+LineSegment.prototype.distanceTo = function (x, y)
+{
+    var middle = Math.sqrt(Math.pow(Math.abs(this.x2 - this.x1), 2) + Math.pow(Math.abs(this.y2 - this.y1), 2)) / 2;
+    var d1 = Math.sqrt(Math.pow(Math.abs(x - this.x1), 2) + Math.pow(Math.abs(y - this.y1), 2));
+    var d2 = Math.sqrt(Math.pow(Math.abs(x - this.x2), 2) + Math.pow(Math.abs(y - this.y2), 2));
+    var output = Math.abs(middle - (d1 + (d2 - d1) / 2));
+    return output;
+};
+
 //module.exports = LineSegment;

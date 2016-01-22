@@ -133,6 +133,11 @@ function keyboard(keyCode)
 			level.guards.splice(guardselected, 1)
 			guardselected = -1;
 		}
+		else if(createpainting && obstacleselected >= 0)
+		{
+			level.paintings.splice(obstacleselected, 1);
+			obstacleselected = -1;
+		}
 		else
 		{
 			pointarray.splice(pointselected, 2);
@@ -394,8 +399,8 @@ function mouseEventHandler(event)
 		//Check whether a painting point is selected
 		for (var i = 0; i < level.paintings.length; i++) {
 			console.log(level.paintings[i]);
-			if (level.paintings[i].begin.x <= position.x + 10 && level.paintings[i].begin.x >= position.x - 10 && 
-				level.paintings[i].begin.y <= position.y + 10 && level.paintings[i].begin.y >= position.y - 10)
+			if (level.paintings[i].painting.x1 <= position.x + 10 && level.paintings[i].painting.x1 >= position.x - 10 && 
+				level.paintings[i].painting.y1 <= position.y + 10 && level.paintings[i].painting.y1 >= position.y - 10)
 			{
 				pointarray = [];
 				creategallery = false;
@@ -409,8 +414,8 @@ function mouseEventHandler(event)
 				beginpoint = 0;
 				obstacleselected = i;
 			}
-			else if (level.paintings[i].end.x <= position.x + 10 && level.paintings[i].end.x >= position.x - 10 && 
-				level.paintings[i].end.y <= position.y + 10 && level.paintings[i].end.y >= position.y - 10)
+			else if (level.paintings[i].painting.x2 <= position.x + 10 && level.paintings[i].painting.x2 >= position.x - 10 && 
+				level.paintings[i].painting.y2 <= position.y + 10 && level.paintings[i].painting.y2 >= position.y - 10)
 			{
 				pointarray = [];
 				creategallery = false;
@@ -479,11 +484,11 @@ function mouseEventHandler(event)
 		if(createpainting && beginpoint == -1)
 		{
 			if(rad_Painting_High.checked)
-				level.paintings.push({begin : new PIXI.Point(), end : new PIXI.Point(), value : 2000});
+				level.paintings.push({painting : new LineSegment, value : 2000});
 			else if(rad_Painting_Medium.checked)
-				level.paintings.push({begin : new PIXI.Point(), end : new PIXI.Point(), value : 1000});
+				level.paintings.push({painting : new LineSegment, value : 1000});
 			else if(rad_Painting_Low.checked)
-				level.paintings.push({begin : new PIXI.Point(), end : new PIXI.Point(), value : 500});
+				level.paintings.push({painting : new LineSegment, value : 500});
 			var paintingAmount = level.paintings.length;
 			obstacleselected = paintingAmount - 1;
 			beginpoint = 0;
@@ -622,7 +627,10 @@ function mouseEventHandler(event)
 					candraw = false;
 			};
 			if(candraw)
+			{
+				console.log(level.paintings[0].painting.distanceTo(position.x, position.y));
 				level.player = {position : new PIXI.Point(Math.floor(position.x), Math.floor(position.y))};
+			}
 		}
 		else if(createpainting && level.gallery.contains(position.x, position.y))
 		{
@@ -639,12 +647,15 @@ function mouseEventHandler(event)
 			{
 				if(beginpoint == 0)
 				{
-					level.paintings[obstacleselected].begin = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
+					level.paintings[obstacleselected].painting.x1 = Math.floor(position.x);
+					level.paintings[obstacleselected].painting.y1 = Math.floor(position.y);
 				}
 				else if(beginpoint == 1)
 				{
-					level.paintings[obstacleselected].end = new PIXI.Point(Math.floor(position.x), Math.floor(position.y));
+					level.paintings[obstacleselected].painting.x2 = Math.floor(position.x);
+					level.paintings[obstacleselected].painting.y2 = Math.floor(position.y);
 				}
+
 			}
 		}
 		redraw();
@@ -755,7 +766,7 @@ function redraw()
 
 	//draw Paintings
 	for (var i = 0; i < level.paintings.length; i++) {
-		if(level.paintings[i].end.x != 0)
+		if(level.paintings[i].painting.x2 != 0)
 		{
 			if(level.paintings[i].value == 2000)
 				paintingGraphics.lineStyle(10, 0xffd700, 1);
@@ -763,8 +774,8 @@ function redraw()
 				paintingGraphics.lineStyle(10, 0xC0C0C0, 1);
 			else if(level.paintings[i].value == 500)
 				paintingGraphics.lineStyle(10, 0xcd7f32, 1);
-			paintingGraphics.moveTo(level.paintings[i].begin.x, level.paintings[i].begin.y);
-			paintingGraphics.lineTo(level.paintings[i].end.x, level.paintings[i].end.y);
+			paintingGraphics.moveTo(level.paintings[i].painting.x1, level.paintings[i].painting.y1);
+			paintingGraphics.lineTo(level.paintings[i].painting.x2, level.paintings[i].painting.y2);
 		}
 	};
 
@@ -796,10 +807,10 @@ function redraw()
 		pointgraphics.drawCircle(level.finish.points[j], level.finish.points[j+1], 5);
 	};
 	for (var i = 0; i < level.paintings.length; i++) {
-		pointgraphics.drawCircle(level.paintings[i].begin.x, level.paintings[i].begin.y, 5);
-		if(level.paintings[i].end.x != 0)
+		pointgraphics.drawCircle(level.paintings[i].painting.x1, level.paintings[i].painting.y1, 5);
+		if(level.paintings[i].painting.x2 != 0)
 		{
-			pointgraphics.drawCircle(level.paintings[i].end.x, level.paintings[i].end.y, 5);
+			pointgraphics.drawCircle(level.paintings[i].painting.x2, level.paintings[i].painting.y2, 5);
 		}
 	};
 	pointgraphics.endFill();
