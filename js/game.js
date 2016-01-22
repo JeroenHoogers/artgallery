@@ -63,6 +63,11 @@ var visibilityMask = new PIXI.Graphics();
 var miscGraphics = new PIXI.Graphics();
 var debugGraphics = new PIXI.Graphics();
 
+
+// HUD elements
+var targetMoneyText;
+var titleText;
+
 //drawVisibility(guards[0].x, guards[0].y, 0);
 
 stage.interactive = true;
@@ -111,10 +116,10 @@ function initialize()
 	wallSprite.mask = wallGraphics;
 
 	// Draw HUD
-	var titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 2});
+	titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 2});
 	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
 	var currentText = new PIXI.Text("Current: ", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
-	var targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#FFFF55", stroke:"#999999", strokeThickness: 1});
+	targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#FFFF55", stroke:"#999999", strokeThickness: 1});
 	var currentMoneyText = new PIXI.Text("$2000,- ", {font:"22px Arial", fill:"gold", stroke:"gray", strokeThickness: 2});
 	titleText.position = new PIXI.Point(0, 0);
 	targetText.position = new PIXI.Point(1000, 0);
@@ -174,7 +179,8 @@ function loadstage()
 	level.load(currentStage);
 
 	leftSpawn = false;
-	canFinish = true;
+	canFinish = false;
+	currentMoney = 0;
 
 	guardGraphics.clear();
 	guardGraphics.lineStyle(2, 0x990000, 1);
@@ -263,19 +269,19 @@ function loadstage()
 
 		paintingGraphics.lineStyle(10, 0xFFFFFF, 1);
 		paintingGraphics.moveTo(
-			level.paintings[i].begin.x, 
-			level.paintings[i].begin.y);
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
 		paintingGraphics.lineTo(
-			level.paintings[i].end.x, 
-			level.paintings[i].end.y);
+			level.paintings[i].painting.x2, 
+			level.paintings[i].painting.y2);
 
 		paintingGraphics.lineStyle(8, paintingColor, 1);
 		paintingGraphics.moveTo(
-			level.paintings[i].begin.x, 
-			level.paintings[i].begin.y);
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
 		paintingGraphics.lineTo(
-			level.paintings[i].end.x, 
-			level.paintings[i].end.y);
+			level.paintings[i].painting.x2, 
+			level.paintings[i].painting.y2);
 	};
 
 	// Draw holes
@@ -378,6 +384,8 @@ function update()
 	if(pause)
 		return;
 
+	targetMoneyText.text = "" +currentMoney+" / "+ level.target + "";
+
     var step = parseInt((Date.now() - starttime) / 1000);
     var deltatime = (Date.now() - lastframe) / 1000;
 
@@ -407,9 +415,6 @@ function update()
 		level.guards[g].alertedMeter.visible = (level.guards[g].alertedRatio > 0);
 		//level.guards[g].light.position = level.guards[g].position;
 		
-
-
-
 		//level.guards[g].alertedRatio += deltatime / detectionTime;
 	
 
@@ -452,6 +457,22 @@ function update()
 		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
 
+	// Use key is down, check whether the player is close to a painting
+	if(useKeydown)
+	{
+		for (var i = level.paintings.length - 1; i >= 0; i--) {
+			if(level.paintings[i].painting.distanceTo(level.player.position.x, level.player.position.y) < 3)
+			{
+				currentMoney += level.paintings[i].value;
+				level.paintings.splice(i, 1);
+			}
+		};
+
+
+		// Check whether the player has collected enough money to proceed
+		if(currentMoney >= level.target)
+			canFinish = true;
+	}
 
 	if(level.gallery.contains(nextPosition.x, nextPosition.y) || 
 		(level.start.contains(nextPosition.x, nextPosition.y) && !leftSpawn) || 

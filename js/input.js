@@ -115,7 +115,7 @@ function keyboard(keyCode)
 
   use.release = function() 
   {
-    if (!use.isDown) {
+    if (use.isDown) {
       useKeydown = false;
     }
   };
