@@ -1,6 +1,7 @@
 var stage = new PIXI.Container();
-var renderer = PIXI.autoDetectRenderer(1280, 720,{backgroundColor : 0x999999}, false, true);
-renderer.forceFXAA = true;
+var renderer = PIXI.autoDetectRenderer(1280, 720, { transparent: true}, false, true);
+//renderer.forceFXAA = true;
+//{backgroundColor :0x999999, transparent: true}
 document.body.appendChild(renderer.view);
 
 //create a texture
@@ -21,6 +22,7 @@ var gameoverMenu = new PIXI.Container();
 var pauseMenu = new PIXI.Container();
 var helpMenu = new PIXI.Container();
 
+var currentStage = 0;
 
 var guardTexture = new PIXI.RenderTexture(renderer, 30, 30);
 var level = {};
@@ -35,12 +37,16 @@ var useKeydown = false;
 
 var starttime = null;
 
+var currentMoney = 0;
+
 // Guard parameters
 var detectionTime = 0.5; // seconds
 var cooldownRate = 0.1;
 
 var leftSpawn = false;
 var canFinish = false;
+
+var pause = false;
 
 // Create graphics objects
 var galleryGraphics = new PIXI.Graphics();
@@ -105,10 +111,10 @@ function initialize()
 	wallSprite.mask = wallGraphics;
 
 	// Draw HUD
-	var titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"gray", strokeThickness: 4});
-	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"gray", strokeThickness: 3});
-	var currentText = new PIXI.Text("Current: ", {font:"20px Arial", fill:"white", stroke:"gray", strokeThickness: 3});
-	var targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#ffFF99", stroke:"gray", strokeThickness: 2});
+	var titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 2});
+	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
+	var currentText = new PIXI.Text("Current: ", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
+	var targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#FFFF55", stroke:"#999999", strokeThickness: 1});
 	var currentMoneyText = new PIXI.Text("$2000,- ", {font:"22px Arial", fill:"gold", stroke:"gray", strokeThickness: 2});
 	titleText.position = new PIXI.Point(0, 0);
 	targetText.position = new PIXI.Point(1000, 0);
@@ -123,82 +129,52 @@ function initialize()
 	stage.addChild(hud);
 
 	// Load the gallery
-	loadlevel();
+	loadstage();
 }
 
-function loadlevel()
+function gameover()
 {
-	// level.gallery = new PIXI.Polygon([
-	// 	new PIXI.Point(50,20),
-	// 	new PIXI.Point(700,140),
-	// 	new PIXI.Point(1200,150),
-	// 	new PIXI.Point(1000,585),
-	// 	new PIXI.Point(830,605),
-	// 	new PIXI.Point(700,350),
-	// 	new PIXI.Point(500,600),
-	// 	new PIXI.Point(470,540),
-	// 	new PIXI.Point(100,650),
-	// 	new PIXI.Point(140,230)
-	// ])
 
-	// level.holes = [
-	// 	new PIXI.Polygon([
-	// 		new PIXI.Point(290,250),
-	// 		new PIXI.Point(400,230),
-	// 		new PIXI.Point(450,350),
-	// 		new PIXI.Point(300,420)]
-	// 	),
-	// 	new PIXI.Polygon([
-	// 		new PIXI.Point(850,250),
-	// 		new PIXI.Point(940,310),
-	// 		new PIXI.Point(780,340),
-	// 		new PIXI.Point(750,310)]
-	// 	)
-	// ];
+	unloadstage();
+	loadstage();
+}
 
-	// level.obstacles = [
-	// 	new PIXI.Polygon([
-	// 		new PIXI.Point(570,200),
-	// 		new PIXI.Point(680,260),
-	// 		new PIXI.Point(530,340)
-	// 	])
-	// ];
+function stagecompleted()
+{
+	currentStage++;
+	if(currentStage < levels.length)
+	{
+		// Load the next stage
+		unloadstage();
+		loadstage();
+	}
+	else
+	{
+		gamecompleted();
+		pause = true;
+	}
+}
 
-	// level.paintings = [
-	// 	{
-	// 		position: new PIXI.Point(400,100),
-	// 		value: 1000
-	// 	},
-	// 	{
-	// 		position: new PIXI.Point(600,100),
-	// 		value: 500
-	// 	}
-	// ];
+function gamecompleted()
+{
+	alert("You have completed the game!");
+}
 
-	// level.guards = [
-	// 	{
-	// 		position: new PIXI.Point(500,300),
-	// 		guardpath: [
-	// 			new PIXI.Point(500,250),
-	// 			new PIXI.Point(350,150),
-	// 			new PIXI.Point(250,150),
-	// 			new PIXI.Point(700,140),
-	// 			new PIXI.Point(820,190),
-	// 			new PIXI.Point(700,140),
-	// 			new PIXI.Point(500,150)
-	// 		]
-	// 	}
-	// 	//,
-	// 	// {
-	// 	// 	position: new PIXI.Point(960,300),
-	// 	// 	guardpath: []
-	// 	// }
-	// ];
+function unloadstage()
+{
+	// Remove guard sprites
+	for (var i = 0; i < level.guards.length; i++) {
+		stage.removeChild(level.guards[i].container);
+	};
+}
 
-	// level.player = {position: new PIXI.Point(900,500)};
-
+function loadstage()
+{
 	level = new Level();
-	level.load("level4");
+	level.load(currentStage);
+
+	leftSpawn = false;
+	canFinish = true;
 
 	guardGraphics.clear();
 	guardGraphics.lineStyle(2, 0x990000, 1);
@@ -248,8 +224,17 @@ function loadlevel()
 	}
 
 	// Draw gallery mask
+	galleryMask.clear();
 	galleryMask.beginFill(0);
 	galleryMask.drawPolygon(level.gallery.points);
+	galleryMask.endFill();
+
+	galleryMask.beginFill(0);
+	galleryMask.drawPolygon(level.start.points);
+	galleryMask.endFill();
+
+	galleryMask.beginFill(0);
+	galleryMask.drawPolygon(level.finish.points);
 	galleryMask.endFill();
 
 	// Draw gallery walls
@@ -314,7 +299,7 @@ function loadlevel()
 
 	// Draw shadows
 	shadowGraphics.clear();
-	shadowGraphics.beginFill(0x000000, 0.2);
+	shadowGraphics.beginFill(0x000000, 0.3);
 	shadowGraphics.drawPolygon(level.gallery.points);
 	shadowGraphics.endFill();
 	shadowGraphics.mask = shadowMaskSprite;
@@ -390,6 +375,9 @@ function update()
 	if(!lastframe) lastframe = Date.now();
     requestAnimationFrame( update );
 
+	if(pause)
+		return;
+
     var step = parseInt((Date.now() - starttime) / 1000);
     var deltatime = (Date.now() - lastframe) / 1000;
 
@@ -401,6 +389,10 @@ function update()
 			level.guards[g].alerted = true;
 			level.guards[g].alertedRatio += deltatime / detectionTime;
 			level.guards[g].alertedRatio = Math.min(1.0, level.guards[g].alertedRatio);
+			
+			// Player was detected, game over
+			if(level.guards[g].alertedRatio == 1)
+				gameover();
 		}
 		else
 		{
@@ -459,10 +451,11 @@ function update()
 		level.player.position.x + (playermovement.x * playerspeed * deltatime), 
 		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
-	if(!leftSpawn)
-		leftSpawn = !level.start.contains(level.player.position.x, level.player.position.y);
 
-	if(level.gallery.contains(nextPosition.x, nextPosition.y) || (level.start.contains(nextPosition.x, nextPosition.y) && !leftSpawn))
+
+	if(level.gallery.contains(nextPosition.x, nextPosition.y) || 
+		(level.start.contains(nextPosition.x, nextPosition.y) && !leftSpawn) || 
+		(level.finish.contains(nextPosition.x, nextPosition.y) && canFinish))
 	{
 		var collision = false;
 
@@ -494,6 +487,11 @@ function update()
 			level.player.position.y = nextPosition.y;
 		}
 	}
+	if(!leftSpawn)
+		leftSpawn = !level.start.contains(level.player.position.x, level.player.position.y);
+
+	if(canFinish && level.finish.contains(level.player.position.x, level.player.position.y))
+		stagecompleted();
 
 	// draw moving objects
 	draw();
