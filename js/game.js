@@ -249,40 +249,7 @@ function loadstage()
 	wallGraphics.drawPolygon(level.gallery.points);
 
 	// Draw paintings
-	paintingGraphics.clear();
-	for (var i = 0; i < level.paintings.length; i++) 
-	{
-		var val = level.paintings[i].value;
-		var paintingColor;
-
-		switch (val) {
-			case 500: 	// Bronze
-				paintingColor = 0xCD7F32;
-				break;
-			case 1000: 	// Silver
-				paintingColor = 0xC0C0C0;
-				break;
-			case 2000: 	// Gold
-				paintingColor = 0xFFD700;
-				break;
-		}
-
-		paintingGraphics.lineStyle(10, 0xFFFFFF, 1);
-		paintingGraphics.moveTo(
-			level.paintings[i].painting.x1, 
-			level.paintings[i].painting.y1);
-		paintingGraphics.lineTo(
-			level.paintings[i].painting.x2, 
-			level.paintings[i].painting.y2);
-
-		paintingGraphics.lineStyle(8, paintingColor, 1);
-		paintingGraphics.moveTo(
-			level.paintings[i].painting.x1, 
-			level.paintings[i].painting.y1);
-		paintingGraphics.lineTo(
-			level.paintings[i].painting.x2, 
-			level.paintings[i].painting.y2);
-	};
+	redrawPaintings();
 
 	// Draw holes
 	galleryGraphics.clear();
@@ -322,6 +289,45 @@ function loadstage()
 	miscGraphics.beginFill(0x00FF00, 0.3);
 	miscGraphics.drawPolygon(level.finish.points);
 	miscGraphics.endFill();
+}
+
+function redrawPaintings()
+{
+	// Draw paintings
+	paintingGraphics.clear();
+	for (var i = 0; i < level.paintings.length; i++) 
+	{
+		var val = level.paintings[i].value;
+		var paintingColor;
+
+		switch (val) {
+			case 500: 	// Bronze
+				paintingColor = 0xCD7F32;
+				break;
+			case 1000: 	// Silver
+				paintingColor = 0xC0C0C0;
+				break;
+			case 2000: 	// Gold
+				paintingColor = 0xFFD700;
+				break;
+		}
+
+		paintingGraphics.lineStyle(10, 0xFFFFFF, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
+		paintingGraphics.lineTo(
+			level.paintings[i].painting.x2, 
+			level.paintings[i].painting.y2);
+
+		paintingGraphics.lineStyle(8, paintingColor, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
+		paintingGraphics.lineTo(
+			level.paintings[i].painting.x2, 
+			level.paintings[i].painting.y2);
+	};
 }
 
 // Draw function, called every frame
@@ -465,6 +471,7 @@ function update()
 			{
 				currentMoney += level.paintings[i].value;
 				level.paintings.splice(i, 1);
+				redrawPaintings();
 			}
 		};
 
