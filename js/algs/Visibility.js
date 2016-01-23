@@ -59,6 +59,7 @@ function calculateVisibility(stopat)
 					return l2 - l1;
 				else
 				{
+					return 0;	
 					 var angle1 = Math.atan2(a.e1.y, a.e1.x) + Math.PI;
 					 var angle2 = Math.atan2(a.e2.y, a.e2.x) + Math.PI;
 					// console.log("original" + a.angle + "1: " + angle1 + " 2: " + angle2);

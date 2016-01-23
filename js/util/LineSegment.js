@@ -110,6 +110,12 @@ LineSegment.prototype.intersects = function (ray)
     return output;   
 };
 
+/**
+ * Checks the distance from a specified point to this linesegment
+ *
+ * @param the point 
+ * @return the distance from the point to this linesegment
+ */
 LineSegment.prototype.distanceTo = function (x, y)
 {
     var middle = Math.sqrt(Math.pow(Math.abs(this.x2 - this.x1), 2) + Math.pow(Math.abs(this.y2 - this.y1), 2)) / 2;
@@ -118,5 +124,6 @@ LineSegment.prototype.distanceTo = function (x, y)
     var output = Math.abs(middle - (d1 + (d2 - d1) / 2));
     return output;
 };
+
 
 //module.exports = LineSegment;

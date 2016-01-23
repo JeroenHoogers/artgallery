@@ -46,6 +46,9 @@ var cooldownRate = 0.1;
 var leftSpawn = false;
 var canFinish = false;
 
+// Painting capture speed
+var captureSpeed = 400;
+
 var pause = false;
 
 // Create graphics objects
@@ -229,6 +232,11 @@ function loadstage()
 		level.guards[i].container.addChild(level.guards[i].alertedMeter);
 	}
 
+	// Initialize paintings
+	for (var i = 0; i < level.paintings.length; i++) {
+		level.paintings[i].captureRatio = 0.0;
+	}
+
 	// Draw gallery mask
 	galleryMask.clear();
 	galleryMask.beginFill(0);
@@ -247,9 +255,6 @@ function loadstage()
 	wallGraphics.clear();
 	wallGraphics.lineStyle(8, 0xFFFFFF, 1);
 	wallGraphics.drawPolygon(level.gallery.points);
-
-	// Draw paintings
-	redrawPaintings();
 
 	// Draw holes
 	galleryGraphics.clear();
@@ -281,54 +286,10 @@ function loadstage()
 	miscGraphics.clear();
 
 	wallGraphics.drawPolygon(level.start.points);
-	miscGraphics.beginFill(0x0000FF, 0.3);
-	miscGraphics.drawPolygon(level.start.points);
-	miscGraphics.endFill();
-
 	wallGraphics.drawPolygon(level.finish.points);
-	miscGraphics.beginFill(0x00FF00, 0.3);
-	miscGraphics.drawPolygon(level.finish.points);
-	miscGraphics.endFill();
+	redrawMisc();
 }
 
-function redrawPaintings()
-{
-	// Draw paintings
-	paintingGraphics.clear();
-	for (var i = 0; i < level.paintings.length; i++) 
-	{
-		var val = level.paintings[i].value;
-		var paintingColor;
-
-		switch (val) {
-			case 500: 	// Bronze
-				paintingColor = 0xCD7F32;
-				break;
-			case 1000: 	// Silver
-				paintingColor = 0xC0C0C0;
-				break;
-			case 2000: 	// Gold
-				paintingColor = 0xFFD700;
-				break;
-		}
-
-		paintingGraphics.lineStyle(10, 0xFFFFFF, 1);
-		paintingGraphics.moveTo(
-			level.paintings[i].painting.x1, 
-			level.paintings[i].painting.y1);
-		paintingGraphics.lineTo(
-			level.paintings[i].painting.x2, 
-			level.paintings[i].painting.y2);
-
-		paintingGraphics.lineStyle(8, paintingColor, 1);
-		paintingGraphics.moveTo(
-			level.paintings[i].painting.x1, 
-			level.paintings[i].painting.y1);
-		paintingGraphics.lineTo(
-			level.paintings[i].painting.x2, 
-			level.paintings[i].painting.y2);
-	};
-}
 
 // Draw function, called every frame
 function draw()
@@ -377,7 +338,92 @@ function draw()
 		shadowMaskGraphics.endFill();
 	};
 
+	// Redraw paintings
+	redrawPaintings();
+
 	shadowMask.render(shadowMaskGraphics);
+}
+
+
+function redrawPaintings()
+{
+	// Draw paintings
+	paintingGraphics.clear();
+	for (var i = 0; i < level.paintings.length; i++) 
+	{
+		var val = level.paintings[i].value;
+		var paintingColor;
+
+		switch (val) {
+			case 500: 	// Bronze
+				paintingColor = 0xCD7F32;
+				break;
+			case 1000: 	// Silver
+				paintingColor = 0xC0C0C0;
+				break;
+			case 2000: 	// Gold
+				paintingColor = 0xFFD700;
+				break;
+		}
+
+		paintingGraphics.lineStyle(10, 0xFFFFFF, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
+		paintingGraphics.lineTo(
+			level.paintings[i].painting.x2, 
+			level.paintings[i].painting.y2);
+
+		paintingGraphics.lineStyle(8, paintingColor, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
+		paintingGraphics.lineTo(
+			level.paintings[i].painting.x2, 
+			level.paintings[i].painting.y2);
+
+		// Draw capture progress bar
+		var progressPoint = level.paintings[i].painting.interpolate(level.paintings[i].painting.x1, level.paintings[i].painting.y1, level.paintings[i].captureRatio);
+
+		paintingGraphics.lineStyle(8, 0xFFFFFF, 1);
+		paintingGraphics.moveTo(
+			level.paintings[i].painting.x1, 
+			level.paintings[i].painting.y1);
+		paintingGraphics.lineTo(
+			progressPoint.x, 
+			progressPoint.y);
+	};
+}
+
+function redrawMisc()
+{
+	miscGraphics.clear();
+
+	if(leftSpawn)
+	{
+		miscGraphics.beginFill(0xCCCCCC, 0.7);
+		miscGraphics.drawPolygon(level.start.points);
+		miscGraphics.endFill();
+	}
+	else
+	{
+		miscGraphics.beginFill(0x0000FF, 0.3);
+		miscGraphics.drawPolygon(level.start.points);
+		miscGraphics.endFill();
+	}
+
+	if(canFinish)
+	{
+		miscGraphics.beginFill(0x00FF00, 0.3);
+		miscGraphics.drawPolygon(level.finish.points);
+		miscGraphics.endFill();
+	}
+	else
+	{
+		miscGraphics.beginFill(0xCCCCCC, 0.7);
+		miscGraphics.drawPolygon(level.finish.points);
+		miscGraphics.endFill();
+	}
 }
 
 // Update function, called every frame
@@ -463,23 +509,43 @@ function update()
 		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
 
+
+
 	// Use key is down, check whether the player is close to a painting
 	if(useKeydown)
 	{
 		for (var i = level.paintings.length - 1; i >= 0; i--) {
-			if(level.paintings[i].painting.distanceTo(level.player.position.x, level.player.position.y) < 3)
+			if(level.paintings[i].painting.distanceTo(level.player.position.x, level.player.position.y) < 4)
 			{
-				currentMoney += level.paintings[i].value;
-				level.paintings.splice(i, 1);
-				redrawPaintings();
+				
+				level.paintings[i].captureRatio += deltatime * (1/level.paintings[i].value) * captureSpeed;
+				if(level.paintings[i].captureRatio >= 1.0)
+				{
+					currentMoney += level.paintings[i].value;
+					level.paintings.splice(i, 1);
+				}
+			}
+			else
+			{
+				level.paintings[i].captureRatio = 0;
 			}
 		};
 
-
 		// Check whether the player has collected enough money to proceed
 		if(currentMoney >= level.target)
+		{
 			canFinish = true;
+			redrawMisc();
+		}
 	}
+	else
+	{
+		for (var i = 0; i < level.paintings.length; i++) {
+			level.paintings[i].captureRatio = 0;
+		}
+
+	}
+
 
 	if(level.gallery.contains(nextPosition.x, nextPosition.y) || 
 		(level.start.contains(nextPosition.x, nextPosition.y) && !leftSpawn) || 
@@ -516,7 +582,10 @@ function update()
 		}
 	}
 	if(!leftSpawn)
+	{
 		leftSpawn = !level.start.contains(level.player.position.x, level.player.position.y);
+		redrawMisc();
+	}
 
 	if(canFinish && level.finish.contains(level.player.position.x, level.player.position.y))
 		stagecompleted();
