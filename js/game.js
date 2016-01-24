@@ -18,9 +18,9 @@ var shadowMaskGraphics = new PIXI.Graphics();
 var shadowMaskSprite = new PIXI.Sprite(shadowMask);
 
 var hud = new PIXI.Container();
-var gameoverMenu = new PIXI.Container();
-var pauseMenu = new PIXI.Container();
-var helpMenu = new PIXI.Container();
+// var gameoverMenu = new PIXI.Container();
+// var pauseMenu = new PIXI.Container();
+// var helpMenu = new PIXI.Container();
 
 var currentStage = 0;
 
@@ -83,9 +83,10 @@ var lastframe;
 var playerspeed = 200;
 var guardspeed = 50;
 
-initialize();
+//initialize();
+showstartmenu();
 
-update();
+//update();
 
 function initialize()
 {
@@ -117,7 +118,11 @@ function initialize()
 	floorSprite.mask = galleryMask;
 
 	wallSprite.mask = wallGraphics;
+	startgame();
+}
 
+function startgame()
+{
 	// Draw HUD
 	titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 2});
 	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});

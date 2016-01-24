@@ -4,6 +4,8 @@ var left = keyboard(37),
     right = keyboard(39),
     down = keyboard(40),
     use = keyboard(69);
+    pkey = keyboard(80);
+    esc = keyboard(27);
 
 function keyboard(keyCode) 
 {
@@ -118,6 +120,27 @@ function keyboard(keyCode)
     if (use.isDown) {
       useKeydown = false;
     }
+  };
+
+  pkey.press = function() 
+  {
+    pause = true;
+    
+    showpauzemenu();
+  };
+
+  pkey.release = function() 
+  {
+
+  }; 
+  esc.press = function() 
+  {
+    pause = true;
+  };
+
+  esc.release = function() 
+  {
+    showpauzemenu();
   };
 
 function mouseEventHandler(event)
