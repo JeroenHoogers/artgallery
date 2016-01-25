@@ -73,17 +73,6 @@ function calculateVisibility(stopat)
 
 				endpoint.neighbour2.beginsSegment = (angle2Diff > 0) ? false : true;
 
-	  // segment.p1.beginsSegment = dAngle > 0;
-	  // segment.p2.beginsSegment = !segment.p1.beginsSegment;
-
-		// 				if((neighbourangle < Math.PI && 
-		// 					p.angle > Math.PI && 
-		// 					neighbourangle + Math.PI * 2 > p.angle && 
-		// 					neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
-		// 					(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
-		// 				{
-
-
 				if(angle1Diff > 0 || angle2Diff > 0)
 					endpoint.beginsSegment = true;
 
@@ -103,7 +92,37 @@ function calculateVisibility(stopat)
 	    	return 0;
 	    });
 
-	    var status = [];
+	    // Construct status heap with a custom compare function
+	    var status = new buckets.BSTree(function(a,b)
+    	{
+    		var ray1 = new Ray(o.x, o.y, a.x, a.y);
+    		var ray2 = new Ray(o.x, o.y, b.x, b.y);
+
+    		var hit1 = a.intersects(ray1);
+    		var hit2 = b.intersects(ray2);
+
+    		var dist1 = Math.sqrt(Math.pow(o.x - hit1.x, 2) + Math.pow(o.y - hit1.y, 2));
+    		var dist2 = Math.sqrt(Math.pow(o.x - hit2.x, 2) + Math.pow(o.y - hit2.y, 2));
+
+    		var diff = dist1 - dist2;
+    		//var diff = a.dist - b.dist;
+    		
+    		if(diff > 0) return 1;
+    		if(diff < 0) return -1;
+
+			// Check which line is closer by taking a point slightly further on the line
+			var p1 = a.interpolate(p.x, p.y, 0.01);
+			var p2 = b.interpolate(p.x, p.y, 0.01);
+
+			var dist1 = Math.sqrt(Math.pow(o.x - p1.x, 2) + Math.pow(o.y - p1.y, 2));
+			var dist2 = Math.sqrt(Math.pow(o.x - p2.x, 2) + Math.pow(o.y - p2.y, 2));
+
+			if(dist1 > dist2) return 1;
+			if(dist1 < dist2) return -1;
+
+    		return 0;
+    	});
+
 	    var lastVertex;
 		// var ray = new Ray(x, y, endpoints[0].x, endpoints[0].y);
 
@@ -121,7 +140,8 @@ function calculateVisibility(stopat)
 		    {
 		    	var p = endpoints[i];
 
-		    	var nearestwall = status[0];
+		    	// Get the nearest wall (minimum element in the BST)
+		    	var nearestwall = status.minimum();//status[0];
 
 				// Add walls if p is the first endpoint of this wall
 				if(p.beginsSegment)
@@ -134,78 +154,127 @@ function calculateVisibility(stopat)
 						var exists = false;
 
 						// check whether the wall is already in the status structure
-			    		for (var z = status.length - 1; z >= 0; z--) 
-			    		{
-			    			exists = status[z].isendpoint(p.x, p.y);
-			    			if(exists)
-			    				break;
-			    		}
+			    		// for (var z = status.length - 1; z >= 0; z--) 
+			    		// {
+			    		// 	exists = status[z].isendpoint(p.x, p.y);
+			    		// 	if(exists)
+			    		// 		break;
+			    		// }
+
+			    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
+
+			    		// check whether the wall is already in the status structure
+			    		exists = status.contains(wall);
 
 						// Check whether the wall should be added to the status structure (when p is the first endpoint of this wall)
-						if(!n.beginsSegment)
+						if(!n.beginsSegment && !exists)
 						{
-				    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
-				    		if(!exists)
-				    		{
-				    			wall.age = 0;			
-							}
-							status.push(wall);
+							// if(!exists)
+							// {
+							// 	wall.age = 0;			
+							// }
+							wall.age = 0;			
+							//status.push(wall);
+							status.add(wall);
+						}
+						else if(exists)
+						{
+							status.remove(wall);
 						}
 
 			    	};
-				}
-				// Remove walls with p as second endpoint
-		    	for (var j = status.length - 1; j >= 0; j--) 
-		    	{
-		    		if(status[j].isendpoint(p.x, p.y) && status[j].age > 0)
-		    		{
-		    			// Remove this wall from the status structure
-		    			status.splice(j, 1);
-		    		}
-		    	};
+			 	}
+				// // Remove walls with p as second endpoint
+		  //   	for (var j = status.length - 1; j >= 0; j--) 
+		  //   	{
+		  //   		if(status[j].isendpoint(p.x, p.y) && status[j].age > 0)
+		  //   		{
+		  //   			// Remove this wall from the status structure
+		  //   			//status.splice(j, 1);
+		  //   			status.remove(status[j]);
+		  //   		}
+		  //   	};
 
+		  		// var isRemoved = false;
 
-		    	// Sort walls in the status structure on distance to the origin
-		    	var ray = new Ray(o.x, o.y, p.x, p.y);
+		  		// var wall1 = new LineSegment(p.neighbour1.x, p.neighbour1.y, p.x, p.y);
+		  		// var wall2 = new LineSegment(p.neighbour2.x, p.neighbour2.y, p.x, p.y);
 
-		    	for (var j = status.length - 1; j >= 0; j--) 
-		    	{
-		    		var hit = status[j].intersects(ray);
+		  		// if(status.contains(wall1))
+		  		// 	status.remove(wall1);
 
-		    		// calculate the distance from the origin to this wall
-		    		status[j].dist = Math.sqrt(Math.pow(o.x - hit.x, 2) + Math.pow(o.y - hit.y, 2));
-		    	};
+		  		// if(status.contains(wall2))
+		  		// 	status.remove(wall2);
 
+		    	// // Remove walls with p as second endpoint
+		    	// status.forEach(function(segment)
+		    	// {
+		    	// 	// update it's distance to the origin
+		    	// 	if(segment.isendpoint(p.x, p.y) && segment.age > 0)
+		     // 		{
+		     // 			// Remove this wall from the status structure
+		     // 			var result = status.remove(segment);
+		     // 			// if(!isRemoved)
+		     // 			// 	console.log('segment removed ' + result);
+
+		     // 			// isRemoved = true;
+		     // 			// console.log('segment removed ' + result);
+		     // 		}
+		    	// });
 		    	
-		    	status.sort(function(a,b)
-		    	{
-		    		var diff = a.dist - b.dist;
-		    		if(diff > 0) return 1;
-		    		if(diff < 0) return -1;
 
-	    			// Check which line is closer by taking a point slightly further on the line
-	    			var p1 = a.interpolate(p.x, p.y, 0.01);
-	    			var p2 = b.interpolate(p.x, p.y, 0.01);
+		    	// // Sort walls in the status structure on distance to the origin
+		    	// var ray = new Ray(o.x, o.y, p.x, p.y);
 
-	    			var dist1 = Math.sqrt(Math.pow(o.x - p1.x, 2) + Math.pow(o.y - p1.y, 2));
-	    			var dist2 = Math.sqrt(Math.pow(o.x - p2.x, 2) + Math.pow(o.y - p2.y, 2));
 
-	    			if(dist1 > dist2) return 1;
-	    			if(dist1 < dist2) return -1;
+		    	// for (var j = status.length - 1; j >= 0; j--) 
+		    	// {
+		    	// 	var hit = status[j].intersects(ray);
 
-		    		return 0;
-		    	});
+		    	// 	// calculate the distance from the origin to this wall
+		    	// 	status[j].dist = Math.sqrt(Math.pow(o.x - hit.x, 2) + Math.pow(o.y - hit.y, 2));
+		    	// };
+
+		    	// TODO: implement this using a bst
+		    	// status.sort(function(a,b)
+		    	// {
+		    	// 	var diff = a.dist - b.dist;
+		    	// 	if(diff > 0) return 1;
+		    	// 	if(diff < 0) return -1;
+
+	    		// 	// Check which line is closer by taking a point slightly further on the line
+	    		// 	var p1 = a.interpolate(p.x, p.y, 0.01);
+	    		// 	var p2 = b.interpolate(p.x, p.y, 0.01);
+
+	    		// 	var dist1 = Math.sqrt(Math.pow(o.x - p1.x, 2) + Math.pow(o.y - p1.y, 2));
+	    		// 	var dist2 = Math.sqrt(Math.pow(o.x - p2.x, 2) + Math.pow(o.y - p2.y, 2));
+
+	    		// 	if(dist1 > dist2) return 1;
+	    		// 	if(dist1 < dist2) return -1;
+
+		    	// 	return 0;
+		    	// });
 
 		      	// debugGraphics.lineStyle(i+1, 0x000000, 1);
 		      	// debugGraphics.moveTo(x,y);
 		      	// debugGraphics.lineTo(p.x,p.y);
 
 
+				// Sort walls in the status structure on distance to the origin
+		    	var ray = new Ray(o.x, o.y, p.x, p.y);
+
+		    	status.forEach( function(segment) {
+		    		var hit = segment.intersects(ray);
+
+		    		// calculate the distance from the origin to this wall
+		    		segment.dist = Math.sqrt(Math.pow(o.x - hit.x, 2) + Math.pow(o.y - hit.y, 2));
+		    	});
+
 
 		    	// Debug draws
-		    	if(status.length > 0 && pass == 1 && debug)
+		    	if(status.size() > 0 && pass == 1 && debug)
 		    	{
-			     	var hit = status[0].intersects(ray);
+			     	var hit = status.minimum().intersects(ray);
 
 					debugGraphics.lineStyle(1, 0xff0000, 1);
 					debugGraphics.moveTo(o.x,o.y);
@@ -220,14 +289,24 @@ function calculateVisibility(stopat)
 
 					if(nearestwall != "undefined" && i == stopat - 1)
 					{
-						for (var z = 0; z < status.length; z++) {
-							if(status[z].age > 0)
+						// for (var z = 0; z < status.length; z++) {
+						// 	if(status[z].age > 0)
+						// 		debugGraphics.lineStyle(6, 0x00ff00, 1);
+						// 	else
+						// 		debugGraphics.lineStyle(6, 0xff0000, 1);
+						// 	debugGraphics.moveTo(status[z].x1, status[z].y1);
+						// 	debugGraphics.lineTo(status[z].x2, status[z].y2);			
+						// }
+
+						status.forEach( function(segment) 
+						{
+							if(segment.age > 0)
 								debugGraphics.lineStyle(6, 0x00ff00, 1);
 							else
 								debugGraphics.lineStyle(6, 0xff0000, 1);
-							debugGraphics.moveTo(status[z].x1, status[z].y1);
-							debugGraphics.lineTo(status[z].x2, status[z].y2);			
-						}
+							debugGraphics.moveTo(segment.x1, segment.y1);
+							debugGraphics.lineTo(segment.x2, segment.y2);		
+						});
 
 						debugGraphics.lineStyle(3, 0x0000ff, 1);
 						debugGraphics.moveTo(nearestwall.x1, nearestwall.y1);
@@ -235,12 +314,22 @@ function calculateVisibility(stopat)
 					}
 				}
 
-				for (var j = 0; j < status.length; j++) {
-					status[j].age = 1;
-				};
+
+
+				// for (var j = 0; j < status.length; j++) {
+				// 	status[j].age = 1;
+				// };
+				
+     			
+				status.forEach(function(segment)
+		    	{
+		    		// Update age
+	     			segment.age = 1;
+		    	});
 
 		    	// Check whether the nearest wall has changed, if so construct a visibility triangle
-		    	if(typeof nearestwall != 'undefined' && status.length > 0 && !nearestwall.equals(status[0]))
+		    	//if(typeof nearestwall != 'undefined' && status.length > 0 && !nearestwall.equals(status[0]))
+		    	if(typeof nearestwall != 'undefined' && status.size() > 0 && !nearestwall.equals(status.minimum()))
 		    	{
 		    		if(pass == 1)
 			    	{
@@ -285,11 +374,10 @@ function calculateVisibility(stopat)
 	    };
 
 	    //visibilityPolygon = new PIXI.Polygon(visPoints);
+	    level.guards[g].visibility = new PIXI.Polygon(visPoints);
 
 	    if(!debug)
 	    {
-		   	level.guards[g].visibility = new PIXI.Polygon(visPoints);
-
 		    // Draw the entire visibility polygon to the visibility mask
 	    	visibilityMask.beginFill(0x000000, 0);
 			visibilityMask.drawPolygon(level.guards[g].visibility);

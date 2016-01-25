@@ -226,6 +226,7 @@ function loadstage()
 		var lightSprite = new PIXI.Sprite(lightTexture);
 		lightSprite.anchor.x = 0.5;
 		lightSprite.anchor.y = 0.5;
+		lightSprite.visible = !debug;
 
 		var alertedGraphics = new PIXI.Graphics();
 
