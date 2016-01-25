@@ -5,11 +5,13 @@ var renderer = PIXI.autoDetectRenderer(1280, 720, { transparent: true}, false, t
 document.body.appendChild(renderer.view);
 
 //create a texture
-var floorTexture = PIXI.Texture.fromImage("assets/textures/wood.jpg");
-var alertedTexture = PIXI.Texture.fromImage("assets/textures/mgs.png");
-var lightTexture = PIXI.Texture.fromImage("assets/textures/light.png");
-var wallTexture = PIXI.Texture.fromImage("assets/textures/wall.jpg");
-var grabTexture = PIXI.Texture.fromImage("assets/textures/grabs.png");
+var path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1)
+
+var floorTexture = PIXI.Texture.fromImage(path + "assets/textures/wood.jpg");
+var alertedTexture = PIXI.Texture.fromImage(path +"assets/textures/mgs.png");
+var lightTexture = PIXI.Texture.fromImage(path +"assets/textures/light.png");
+var wallTexture = PIXI.Texture.fromImage(path+ "assets/textures/wall.jpg");
+var grabTexture = PIXI.Texture.fromImage(path+ "assets/textures/grabs.png");
 
 var floorSprite = new PIXI.extras.TilingSprite(floorTexture, 1280, 720);
 var wallSprite = new PIXI.extras.TilingSprite(wallTexture, 1280, 720);
@@ -114,7 +116,6 @@ function initialize()
 	stage.addChild(miscGraphics);
 	
 	stage.addChild(guardGraphics);
-	//stage.addChild(guardGraphics);
 	stage.addChild(playerGraphics);
 
 	stage.addChild(shadowMaskSprite);
@@ -141,11 +142,11 @@ function startgame()
 {
 	// Draw HUD
 	titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 2});
-	var targetText = new PIXI.Text("Value", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
+	var targetText = new PIXI.Text("Stolen value:", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
 	targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#FFFF55", stroke:"#999999", strokeThickness: 1});
 	titleText.position = new PIXI.Point(0, 0);
-	targetText.position = new PIXI.Point(1000, 0);
-	targetMoneyText.position = new PIXI.Point(80, 0);
+	targetText.position = new PIXI.Point(950, 0);
+	targetMoneyText.position = new PIXI.Point(130, 0);
 	hud.addChild(titleText);
 	hud.addChild(targetText);
 	targetText.addChild(targetMoneyText);
@@ -158,7 +159,6 @@ function startgame()
 
 function gameover()
 {
-
 	unloadstage();
 	loadstage();
 }
@@ -277,7 +277,7 @@ function loadstage()
 	// Draw holes
 	galleryGraphics.clear();
 	for (var i = 0; i < level.holes.length; i++)  {
-		galleryGraphics.beginFill(0x999999);
+		galleryGraphics.beginFill(0xCCCCCC);
 		galleryGraphics.drawPolygon(level.holes[i].points);
 		galleryGraphics.endFill();
 
