@@ -51,6 +51,9 @@ var captureSpeed = 400;
 
 var pause = false;
 
+// create a filter
+var grayFilter = new PIXI.filters.GrayFilter();
+
 // Create graphics objects
 var galleryGraphics = new PIXI.Graphics();
 var wallGraphics = new PIXI.Graphics();
@@ -447,18 +450,25 @@ function update()
     var step = parseInt((Date.now() - starttime) / 1000);
     var deltatime = (Date.now() - lastframe) / 1000;
 
+    var playerDetected = false;
+    var maxAlertedRatio = 0;
 	// Check whether the player can be seen by any of the guards
 	for (var g = 0; g < level.guards.length; g++) {
 		level.guards[g].alerted = false;
 		if(typeof(level.guards[g].visibility) != "undefined" && level.guards[g].visibility.contains(level.player.position.x, level.player.position.y))
 		{
+			playerDetected = true;
+
 			level.guards[g].alerted = true;
 			level.guards[g].alertedRatio += deltatime / detectionTime;
 			level.guards[g].alertedRatio = Math.min(1.0, level.guards[g].alertedRatio);
+
+			maxAlertedRatio = (maxAlertedRatio < level.guards[g].alertedRatio) ? level.guards[g].alertedRatio : maxAlertedRatio;
 			
 			// Player was detected, game over
 			if(level.guards[g].alertedRatio == 1)
 				gameover();
+
 		}
 		else
 		{
@@ -476,7 +486,7 @@ function update()
 		//level.guards[g].alertedRatio += deltatime / detectionTime;
 	
 
-	// TODO: Improve this code and make it work for all guards
+		// Move guards using a waypoint system
 		if(!level.guards[g].alerted && !debug)
 		{
 			var pathindex = level.guards[g].pathindex;
@@ -509,6 +519,18 @@ function update()
 			level.guards[g].pathindex = pathindex;
 		}
 	};
+
+	if(playerDetected)
+	{
+		// Set the gray filter when the player is detected
+		grayFilter.gray = maxAlertedRatio;
+		stage.filters = [grayFilter];
+	}
+	else
+	{
+		// Remove the filter
+		stage.filters = null;
+	}
 	playermovement = moveplayer.normalize();
 	var nextPosition = new PIXI.Point(
 		level.player.position.x + (playermovement.x * playerspeed * deltatime), 
@@ -520,7 +542,8 @@ function update()
 	// Use key is down, check whether the player is close to a painting
 	if(useKeydown)
 	{
-		for (var i = level.paintings.length - 1; i >= 0; i--) {
+		for (var i = level.paintings.length - 1; i >= 0; i--) 
+		{
 			if(level.paintings[i].painting.distanceTo(level.player.position.x, level.player.position.y) < 4)
 			{
 				
@@ -546,7 +569,8 @@ function update()
 	}
 	else
 	{
-		for (var i = 0; i < level.paintings.length; i++) {
+		for (var i = 0; i < level.paintings.length; i++) 
+		{
 			level.paintings[i].captureRatio = 0;
 		}
 
