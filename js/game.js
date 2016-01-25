@@ -24,7 +24,7 @@ var hud = new PIXI.Container();
 // var pauseMenu = new PIXI.Container();
 // var helpMenu = new PIXI.Container();
 
-var currentStage = 0;
+var currentStage = 4;
 
 var guardTexture = new PIXI.RenderTexture(renderer, 30, 30);
 var level = {};
@@ -89,10 +89,10 @@ var lastframe;
 var playerspeed = 200;
 var guardspeed = 50;
 
-//initialize();
+initialize();
+update();
 showstartmenu();
 
-//update();
 
 function initialize()
 {
@@ -451,7 +451,10 @@ function update()
     requestAnimationFrame( update );
 
 	if(pause)
+	{
+		lastframe = Date.now();
 		return;
+	}
 
 	targetMoneyText.text = "" +currentMoney+" / "+ level.target + "";
 
@@ -544,7 +547,6 @@ function update()
 		level.player.position.x + (playermovement.x * playerspeed * deltatime), 
 		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
-
 
 
 	// Use key is down, check whether the player is close to a painting

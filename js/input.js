@@ -125,13 +125,14 @@ function keyboard(keyCode)
   pkey.press = function() 
   {
     pause = true;
-    
-    showpauzemenu();
   };
 
   pkey.release = function() 
   {
-
+    if(playerspeed == 0)
+      startGameClick();
+    else
+      showpauzemenu();
   }; 
   esc.press = function() 
   {
@@ -140,7 +141,10 @@ function keyboard(keyCode)
 
   esc.release = function() 
   {
-    showpauzemenu();
+    if(playerspeed == 0)
+      startGameClick();
+    else
+      showpauzemenu();
   };
 
 function mouseEventHandler(event)
