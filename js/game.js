@@ -118,6 +118,7 @@ function initialize()
 	floorSprite.mask = galleryMask;
 
 	wallSprite.mask = wallGraphics;
+
 	startgame();
 }
 

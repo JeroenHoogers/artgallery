@@ -4,7 +4,14 @@ function calculateVisibility(stopat)
     visibilityMask.clear();
 	visibilityMask.lineStyle(0, 0xFFFF00, 1);
 
-	for (var g = 0; g < level.guards.length; g++) 
+
+	var nrOfGuards = level.guards.length;
+
+	// If debugging is on, only draw the vision for 1 guard
+	if(debug)
+		nrOfGuards = 1;
+
+	for (var g = 0; g < nrOfGuards; g++) 
 	{
 		var o = new PIXI.Point(parseInt(level.guards[g].position.x), parseInt(level.guards[g].position.y));
 		//var o = level.guards[g].position;
@@ -43,48 +50,45 @@ function calculateVisibility(stopat)
 				endpoint.index = i;
 				endpoint.neighbour1 = e1; 
 				endpoint.neighbour2 = e2;
+				endpoint.beginsSegment = false;
+
+				// Determine whether this endpoint begins a new segment
+				e1angle = Math.atan2(e1.y - o.y, e1.x - o.x ) + Math.PI;
+				e2angle = Math.atan2(e2.y - o.y, e2.x - o.x ) + Math.PI;
+
+				if(e1angle > endpoint.angle || e2angle > endpoint.angle)
+					endpoint.beginsSegment = true;
 
 		    	endpoints.push(endpoint);
 		    }
 	    };
 
-	    endpoints.sort(function(a,b){
+	    // Sort the endpoints on angle, if the angle is the same check which endpoint begins a new segment
+	    endpoints.sort(function(a,b)
+	    {
+	    	if(a.angle > b.angle) return 1;
+	    	if(a.angle < b.angle) return -1;
 
-	    	if(a.angle - b.angle == 0)
-	    	{
-	    		 var l1 = Math.sqrt(Math.pow(o.x - a.x, 2) + Math.pow(o.y - a.y, 2));
-	    		 var l2 = Math.sqrt(Math.pow(o.x - b.x, 2) + Math.pow(o.y - b.y, 2));
+	    	if(!a.beginsSegment && b.beginsSegment) return 1;
+	    	if(a.beginsSegment && !b.beginsSegment) return -1;
 
-	    		 if(a.angle > Math.PI && a.angle < Math.PI * 2.0)
-					return l2 - l1;
-				else
-				{
-					return 0;	
-					 var angle1 = Math.atan2(a.e1.y, a.e1.x) + Math.PI;
-					 var angle2 = Math.atan2(a.e2.y, a.e2.x) + Math.PI;
-					// console.log("original" + a.angle + "1: " + angle1 + " 2: " + angle2);
-					if(a.angle == Math.PI && angle1 <= a.angle && angle2 <= a.angle)
-					{
-						return l2 - l1;
-					}
-					return l1 - l2;
-				}
-	    	}
-	    	return a.angle - b.angle;
-
+	    	return 0;
 	    });
 
 	    var status = [];
 	    var lastVertex;
 		// var ray = new Ray(x, y, endpoints[0].x, endpoints[0].y);
 
-
+		// Used for the debug animation, make sure the number of steps does not exceed the number of endpoints
 		if(stopat > endpoints.length) stopat = endpoints.length;
+
 		var visPoints = [];
+
+		// Do 2 passes, the first pass is to prepare the status structure for the "real" pass
 		for (var pass = 0; pass < 2; pass++) 
 		{
-			//console.debug(status.length);
 			var steps = (pass > 0 && debug) ? stopat : endpoints.length;
+		    
 		    for (var i = 0; i < steps; i++) 
 		    {
 		    	var p = endpoints[i];
@@ -104,6 +108,7 @@ function calculateVisibility(stopat)
 					};
 
 					var exists = false;
+
 					// check whether the wall is already in the status structure
 		    		for (var z = status.length - 1; z >= 0; z--) 
 		    		{
@@ -112,20 +117,15 @@ function calculateVisibility(stopat)
 		    				break;
 		    		}
 
-					//var difference = Math.atan2(dir.y, dir.x) - p.angle;
+					// Check whether the wall should be added to the status structure (when p is the first endpoint of this wall)
 					var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
-					//console.log("Add : ? " + difference);
-					//if(difference < -Math.PI || difference > 0)
+
 					if((neighbourangle < Math.PI && 
 						p.angle > Math.PI && 
 						neighbourangle + Math.PI * 2 > p.angle && 
 						neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
 						(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
 					{
-						//console.log("wall added");
-						//if(exists)
-						//	console.log("wall added twice");
-
 			    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
 			    		if(!exists)
 			    		{
@@ -141,8 +141,7 @@ function calculateVisibility(stopat)
 		    	{
 		    		if(status[j].isendpoint(p.x, p.y) && status[j].age > 0)
 		    		{
-		    			// remove this wall from the array
-						//console.log("wall removed");
+		    			// Remove this wall from the status structure
 		    			status.splice(j, 1);
 		    		}
 		    	};
@@ -154,6 +153,7 @@ function calculateVisibility(stopat)
 		    	for (var j = status.length - 1; j >= 0; j--) 
 		    	{
 		    		var hit = status[j].intersects(ray);
+
 		    		// calculate the distance from the origin to this wall
 		    		status[j].dist = Math.sqrt(Math.pow(o.x - hit.x, 2) + Math.pow(o.y - hit.y, 2));
 		    	};
@@ -164,18 +164,16 @@ function calculateVisibility(stopat)
 		    		var diff = a.dist - b.dist;
 		    		if(diff > 0) return 1;
 		    		if(diff < 0) return -1;
-		    		if(diff == 0)
-		    		{
-		    			// Check which line is closer by taking a point slightly further on the line
-		    			var p1 = a.interpolate(p.x, p.y, 0.01);
-		    			var p2 = b.interpolate(p.x, p.y, 0.01);
 
-		    			var dist1 = Math.sqrt(Math.pow(o.x - p1.x, 2) + Math.pow(o.y - p1.y, 2));
-		    			var dist2 = Math.sqrt(Math.pow(o.x - p2.x, 2) + Math.pow(o.y - p2.y, 2));
+	    			// Check which line is closer by taking a point slightly further on the line
+	    			var p1 = a.interpolate(p.x, p.y, 0.01);
+	    			var p2 = b.interpolate(p.x, p.y, 0.01);
 
-		    			if(dist1 > dist2) return 1;
-		    			if(dist1 < dist2) return -1;
-		    		}
+	    			var dist1 = Math.sqrt(Math.pow(o.x - p1.x, 2) + Math.pow(o.y - p1.y, 2));
+	    			var dist2 = Math.sqrt(Math.pow(o.x - p2.x, 2) + Math.pow(o.y - p2.y, 2));
+
+	    			if(dist1 > dist2) return 1;
+	    			if(dist1 < dist2) return -1;
 
 		    		return 0;
 		    	});
@@ -271,6 +269,7 @@ function calculateVisibility(stopat)
 	    //visibilityPolygon = new PIXI.Polygon(visPoints);
 	    level.guards[g].visibility = new PIXI.Polygon(visPoints);
 
+	    // Draw the entire visibility polygon to the visibility mask
     	visibilityMask.beginFill(0x000000, 0);
 		visibilityMask.drawPolygon(level.guards[g].visibility);
 		visibilityMask.endFill();
