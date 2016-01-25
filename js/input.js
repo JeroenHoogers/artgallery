@@ -153,21 +153,14 @@ function mouseEventHandler(event)
   var position = event.data.global;
   
   debugGraphics.clear();
-  if(mousedown)
+  
+  if(mousedown && debug)
   {
-    //triangleGraphics.clear();
-    //guardGraphics.clear();
     var position = event.data.global;
     level.guards[0].position.x = position.x;
     level.guards[0].position.y = position.y;
-    console.log("x:" +position.x +" y:"+ position.y);
-
-    //drawVisibility(guards[0].x, guards[0].y, 0);
-    
-    //drawVisibility(position.x, position.y, endpoints.length);
+   // console.log("x:" +position.x +" y:"+ position.y);
   }
-
-    calculateVisibility(level.guards[0].x, level.guards[0].y, 0);
 }
 
 

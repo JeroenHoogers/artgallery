@@ -273,5 +273,11 @@ function calculateVisibility(stopat)
     	visibilityMask.beginFill(0x000000, 0);
 		visibilityMask.drawPolygon(level.guards[g].visibility);
 		visibilityMask.endFill();
+
+		// Draw the entire visibility polygon to the guards' visibility mask
+		level.guards[g].visibilityMask.clear();
+    	level.guards[g].visibilityMask.beginFill(0x000000, 0);
+		level.guards[g].visibilityMask.drawPolygon(level.guards[g].visibility);
+		level.guards[g].visibilityMask.endFill();
 	};
 }

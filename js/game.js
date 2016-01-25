@@ -8,10 +8,12 @@ document.body.appendChild(renderer.view);
 var floorTexture = PIXI.Texture.fromImage("assets/textures/wood.jpg");
 var alertedTexture = PIXI.Texture.fromImage("assets/textures/mgs.png");
 var lightTexture = PIXI.Texture.fromImage("assets/textures/light.png");
-var wallTexture = PIXI.Texture.fromImage("assets/textures/wall.jpg")
+var wallTexture = PIXI.Texture.fromImage("assets/textures/wall.jpg");
+var grabTexture = PIXI.Texture.fromImage("assets/textures/grabs.png");
 
 var floorSprite = new PIXI.extras.TilingSprite(floorTexture, 1280, 720);
 var wallSprite = new PIXI.extras.TilingSprite(wallTexture, 1280, 720);
+var stealHintSprite = new PIXI.Sprite(grabTexture);
 
 var shadowMask = new PIXI.RenderTexture(renderer, 1280, 720);
 var shadowMaskGraphics = new PIXI.Graphics();
@@ -40,7 +42,7 @@ var starttime = null;
 var currentMoney = 0;
 
 // Guard parameters
-var detectionTime = 0.5; // seconds
+var detectionTime = 0.6; // seconds
 var cooldownRate = 0.1;
 
 var leftSpawn = false;
@@ -69,10 +71,11 @@ var visibilityMask = new PIXI.Graphics();
 var miscGraphics = new PIXI.Graphics();
 var debugGraphics = new PIXI.Graphics();
 
-
 // HUD elements
 var targetMoneyText;
 var titleText;
+
+var stealPaintingHint;
 
 //drawVisibility(guards[0].x, guards[0].y, 0);
 
@@ -122,6 +125,14 @@ function initialize()
 
 	wallSprite.mask = wallGraphics;
 
+
+	stealPaintingHint = new PIXI.Text("[e]", {font:"15px Arial", fill:"white", stroke:"#999999", strokeThickness: 0});
+	stealPaintingHint.visible = false;
+	stealHintSprite.visible = false;
+
+	stage.addChild(stealPaintingHint);
+	stage.addChild(stealHintSprite);
+
 	startgame();
 }
 
@@ -129,20 +140,15 @@ function startgame()
 {
 	// Draw HUD
 	titleText = new PIXI.Text("Art Gallery Heist", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 2});
-	var targetText = new PIXI.Text("Money", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
-	var currentText = new PIXI.Text("Current: ", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
+	var targetText = new PIXI.Text("Value", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 3});
 	targetMoneyText = new PIXI.Text("$0 / $5000", {font:"22px Arial", fill:"#FFFF55", stroke:"#999999", strokeThickness: 1});
-	var currentMoneyText = new PIXI.Text("$2000,- ", {font:"22px Arial", fill:"gold", stroke:"gray", strokeThickness: 2});
 	titleText.position = new PIXI.Point(0, 0);
 	targetText.position = new PIXI.Point(1000, 0);
-	currentText.position = new PIXI.Point(800, 0);
 	targetMoneyText.position = new PIXI.Point(80, 0);
-	currentMoneyText.position = new PIXI.Point(80, 0);
 	hud.addChild(titleText);
 	hud.addChild(targetText);
-	//hud.addChild(currentText);
 	targetText.addChild(targetMoneyText);
-	//currentText.addChild(currentMoneyText);
+
 	stage.addChild(hud);
 
 	// Load the gallery
@@ -229,12 +235,14 @@ function loadstage()
 		level.guards[i].pathindex = 0;
 		level.guards[i].alertedRatio = 0;
 		level.guards[i].alertedMeter = alertedGraphics;
+		level.guards[i].visibilityMask = new PIXI.Graphics();
 
-		level.guards[i].light.mask = visibilityMask;
+		level.guards[i].light.mask = level.guards[i].visibilityMask;
 		level.guards[i].alertedMeter.mask = level.guards[i].alertedIndicator;
 
 		stage.addChild(level.guards[i].container);
 
+		//level.guards[i].container.addChild(level.guards[i].visibilityMask);
 		level.guards[i].container.addChild(level.guards[i].light);
 		level.guards[i].container.addChild(level.guards[i].sprite);
 		level.guards[i].container.addChild(level.guards[i].alertedIndicator);
@@ -540,13 +548,21 @@ function update()
 
 
 	// Use key is down, check whether the player is close to a painting
-	if(useKeydown)
+
+	stealPaintingHint.visible = false;
+	stealHintSprite.visible = false;
+	for (var i = level.paintings.length - 1; i >= 0; i--) 
 	{
-		for (var i = level.paintings.length - 1; i >= 0; i--) 
+		if(level.paintings[i].painting.distanceTo(level.player.position.x, level.player.position.y) < 4)
 		{
-			if(level.paintings[i].painting.distanceTo(level.player.position.x, level.player.position.y) < 4)
+
+			stealPaintingHint.position = new PIXI.Point(level.player.position.x + 7, level.player.position.y + 40);
+			stealPaintingHint.visible = true;
+			stealHintSprite.position = new PIXI.Point(level.player.position.x, level.player.position.y +10);
+			stealHintSprite.visible = true;
+
+			if(useKeydown)
 			{
-				
 				level.paintings[i].captureRatio += deltatime * (1/level.paintings[i].value) * captureSpeed;
 				if(level.paintings[i].captureRatio >= 1.0)
 				{
@@ -554,12 +570,16 @@ function update()
 					level.paintings.splice(i, 1);
 				}
 			}
-			else
-			{
-				level.paintings[i].captureRatio = 0;
-			}
-		};
 
+		}
+		else
+		{
+			level.paintings[i].captureRatio = 0;
+		}
+	};
+
+	if(useKeydown)
+	{
 		// Check whether the player has collected enough money to proceed
 		if(currentMoney >= level.target)
 		{
