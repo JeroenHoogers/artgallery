@@ -18,7 +18,12 @@ var infoText = [];
 infoText[0] = {header : new PIXI.Text("Algortihm Information", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
 			   innertext : new PIXI.Text("This game is designed and developed by Jeroen Hoogers and Niek van Hulzen \nas project for the course Geometric Algortihms at the TU/e. \n\nThe game is built with a focus on the visibility of the guards, which is necessary to show the\narea each guard can see and whether or not the player is inside this area.\nThe visibility algorithm implemented to calculate the vision of the guards in the game uses\na Binary Search Tree to store the status structure, in which the walls are stored to obtain\nthe vision towards each wall, and a sorted list to store the events of the sweepline.\n\nThe algorithm searches for vertices, which lie on every end of a wall, and connects two walls.\nFor each vertex in the game the algorithm checks whether the guard can see it and\nstores those vertices.\nThen for each vertex that can be seen a triangle will be calculated with the previously seen\nvertex and with all triangles combined the total area the guard can see is determined.", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
 infoText[1] = {header : new PIXI.Text("Debug Information", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
-			   innertext : new PIXI.Text("We have implemented a 'debug' function which can be started from this page where you are\nable to see exactly what the algorithm does.\nThe walls will be drawn as different colors, which is red for newly found walls, green for walls\nin the status, and blue for the nearest wall.\nEach iteration is when a new wall vertex(either inner or outer) is found, which are sorted\nusing a sweep line 360 degrees around the guard.\nFor every vertex that is seen, a yellow line will be drawn to it and a blue triangle will be drawn\nusing the previously seen vertex.\nEvery vertex that can not be seen by the guard will have a red line to it and is discarded.", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
+			   innertext : new PIXI.MultiStyleText("We have implemented a 'debug' function which can be started from this page where you are\nable to see exactly what the algorithm does.\nThe walls will be drawn as different colors, which is <red>red</red> for newly found walls, <green>green</green> for walls\nin the status, and <blue>blue</blue> for the nearest wall.\nEach iteration is when a new wall vertex(either inner or outer) is found, which are sorted\nusing a sweep line 360 degrees around the guard.\nFor every vertex that is seen, a <yellow>yellow</yellow> line will be drawn to it and a <blue>blue</blue> triangle will be drawn\nusing the previously seen vertex.\nEvery vertex that can not be seen by the guard will have a red line to it and is discarded.", {
+        		def: {font:"20px Arial", fill:"white"},
+        		red: { font: "20px Arial", fill: "#FF0000" },
+        		blue: { font: "20px Arial", fill: "#5555FF" },
+        		yellow: { font: "20px Arial", fill: "#FFFF00" },
+        		green: { font: "20px Arial", fill: "#00FF00" }})};	
 infoText[2] = {header : new PIXI.Text("Stealing Paintings", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
 			   innertext : new PIXI.MultiStyleText("Paintings are shown as thick lines on the walls in the colors <bronze>bronze</bronze>, <silver>silver</silver> and <gold>gold</gold>. \nThese colors represent the value of this painting. \n\nTo be able to steal a painting you have to stand near it and press 'e'. \nThe color in the painting will show the progress of taking the painting. \nWhen the color is fully gone, the painting is yours and you can continue to the next painting.", {
         		def: {font:"20px Arial", fill:"white"},
@@ -62,14 +67,14 @@ function showmenu(buttonlength)
 			buttons[i].btn.drawRect(220, 580, 250, 50);	
 			buttons[i].btnText.position = new PIXI.Point(230, 590);		
 		}
-		buttons[i].btn.addChild(buttons[i].btnText);	
+		buttons[i].btn.addChild(buttons[i].btnText);
 		buttons[i].btn.hitArea = buttons[i].btn.getBounds();
-		buttons[i].btn.interactive = true;		
-		menuGraphics.addChild(buttons[i].btn);		
-	};
+		buttons[i].btn.interactive = true;
+		menuGraphics.addChild(buttons[i].btn);
+	}
 	playerspeed = 0;
-	menuGraphics.clear();	
-	menuGraphics.beginFill(0x000000, 0.7);	
+	menuGraphics.clear();
+	menuGraphics.beginFill(0x000000, 0.7);
 	menuGraphics.lineStyle(2, 0xCCCCCC);	 
 	menuGraphics.drawRect(400, 100 , 450, (buttonlength * 100 + 180));
 	menuTitleText.position = new PIXI.Point(500, 170);
@@ -152,7 +157,7 @@ function startGameClick(data){
 
 function infoGameClick(data){	
 	showmenu(6);
-	menustartactive = false;
+	menustartactive = true;
 	menuGraphics.clear();	
 	menuGraphics.beginFill(0x000000, 0.7);	
 	menuGraphics.lineStyle(2, 0xCCCCCC);	 
@@ -168,7 +173,7 @@ function infoGameClick(data){
 	//infoText.text = "Art Gallery Heist \n By Jeroen Hoogers and Niek van Hulzen \n ABCDEFGHIJKLMNOPQRTSUVWXYZ";
 	infoText[currentpage].innertext.position = new PIXI.Point(225, 180);
 	menuGraphics.addChild(infoText[currentpage].innertext);
-	buttons[3].btnText.text = "Debug";		
+	buttons[3].btnText.text = "Start Debug mode";		
 	buttons[3].btn.click = debugGameClick;
 	buttons[5].btnText.text = "Back to menu";		
 	buttons[5].btn.click = menuGameClick;
@@ -209,7 +214,7 @@ function howTotGameClick(data){
 	if(currentpage < 1)
 		currentpage = 1;
 	currentpage++;
-	menustartactive = false;
+	menustartactive = true;
 	menuGraphics.clear();	
 	menuGraphics.beginFill(0x000000, 0.7);	
 	menuGraphics.lineStyle(2, 0xCCCCCC);	 
@@ -226,8 +231,9 @@ function howTotGameClick(data){
 	//infoText.text = "Art Gallery Heist \n By Jeroen Hoogers and Niek van Hulzen \n ABCDEFGHIJKLMNOPQRTSUVWXYZ";
 	menuGraphics.addChild(infoText[currentpage].innertext);
 	menuGraphics.removeChild(buttons[1].btn);
-	buttons[3].btnText.text = "Back";		
-	buttons[3].btn.click = menuGameClick;
+	buttons[5].btnText.text = "Back to Menu";
+	buttons[5].btn.click = menuGameClick;
+	menuGraphics.addChild(buttons[5].btn);
 	if(currentpage < infoText.length - 1)
 	{
 		buttons[4].btnText.text = "Next";	
@@ -240,16 +246,16 @@ function howTotGameClick(data){
 	}
 	if(currentpage > 2)
 	{
-		buttons[5].btnText.text = "Previous";	
-		buttons[5].btn.click = previousPageClick;
-		menuGraphics.addChild(buttons[5].btn);
+		buttons[3].btnText.text = "Previous";	
+		buttons[3].btn.click = previousPageClick;
+		menuGraphics.addChild(buttons[3].btn);
 	}
 	else
 	{
-		menuGraphics.removeChild(buttons[5].btn);
+		menuGraphics.removeChild(buttons[3].btn);
 	}
 
-	if(currentpage == 5)
+	if(currentpage == 6)
 	{
 		menuGraphics.lineStyle(0, 0xFFFFFF, 1);
 		menuGraphics.beginFill(0xFFFFFF);
@@ -270,7 +276,7 @@ function howTotGameClick(data){
 function previousPageClick(data){
 	showmenu(6);
 	currentpage--;
-	menustartactive = false;
+	menustartactive = true;
 	menuGraphics.clear();	
 	menuGraphics.beginFill(0x000000, 0.7);	
 	menuGraphics.lineStyle(2, 0xCCCCCC);	 
@@ -287,8 +293,9 @@ function previousPageClick(data){
 	//infoText.text = "Art Gallery Heist \n By Jeroen Hoogers and Niek van Hulzen \n ABCDEFGHIJKLMNOPQRTSUVWXYZ";
 	menuGraphics.addChild(infoText[currentpage].innertext);
 	menuGraphics.removeChild(buttons[1].btn);
-	buttons[3].btnText.text = "Back";		
-	buttons[3].btn.click = menuGameClick;
+	buttons[5].btnText.text = "Back to Menu";		
+	buttons[5].btn.click = menuGameClick;
+	menuGraphics.addChild(buttons[5].btn);
 	if(currentpage < infoText.length - 1)
 	{
 		buttons[4].btnText.text = "Next";	
@@ -299,15 +306,15 @@ function previousPageClick(data){
 	{
 		menuGraphics.removeChild(buttons[4].btn);
 	}
-	if(currentpage > 1)
+	if(currentpage > 2)
 	{
-		buttons[5].btnText.text = "Previous";	
-		buttons[5].btn.click = previousPageClick;
-		menuGraphics.addChild(buttons[5].btn);
+		buttons[3].btnText.text = "Previous";	
+		buttons[3].btn.click = previousPageClick;
+		menuGraphics.addChild(buttons[3].btn);
 	}
 	else
 	{
-		menuGraphics.removeChild(buttons[5].btn);
+		menuGraphics.removeChild(buttons[3].btn);
 	}
 	renderer.render(stage);
 }
