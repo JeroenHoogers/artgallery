@@ -21,13 +21,16 @@ function calculateVisibility(stopat)
 	    var polygons = [];
 
 	    polygons.push(level.gallery);
-	    for (var i = 0; i < level.holes.length; i++) {
+	    for (var i = 0; i < level.holes.length; i++) 
+	    {
 	     	polygons.push(level.holes[i]);
 	    }; 
 
 	    // Initialize event structure
-	    for (var p = 0; p < polygons.length; p++) {
-		    for (var i = 0;  i < polygons[p].points.length; i+=2) {
+	    for (var p = 0; p < polygons.length; p++) 
+	    {
+		    for (var i = 0;  i < polygons[p].points.length; i+=2) 
+		    {
 		    	var endpoint = {};
 		    	endpoint.x = polygons[p].points[i];
 				endpoint.y = polygons[p].points[i+1];
@@ -52,11 +55,36 @@ function calculateVisibility(stopat)
 				endpoint.neighbour2 = e2;
 				endpoint.beginsSegment = false;
 
+				//var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
+
 				// Determine whether this endpoint begins a new segment
 				e1angle = Math.atan2(e1.y - o.y, e1.x - o.x ) + Math.PI;
 				e2angle = Math.atan2(e2.y - o.y, e2.x - o.x ) + Math.PI;
 
-				if(e1angle > endpoint.angle || e2angle > endpoint.angle)
+				var angle1Diff =  e1angle - endpoint.angle;
+				if (angle1Diff <= -Math.PI) angle1Diff += 2 * Math.PI;
+				if (angle1Diff >   Math.PI) angle1Diff -= 2 * Math.PI;
+
+				endpoint.neighbour1.beginsSegment = (angle1Diff > 0) ? false : true;
+
+				var angle2Diff = e2angle - endpoint.angle;
+				if (angle2Diff <= -Math.PI) angle2Diff += 2 * Math.PI;
+				if (angle2Diff >   Math.PI) angle2Diff -= 2 * Math.PI;
+
+				endpoint.neighbour2.beginsSegment = (angle2Diff > 0) ? false : true;
+
+	  // segment.p1.beginsSegment = dAngle > 0;
+	  // segment.p2.beginsSegment = !segment.p1.beginsSegment;
+
+		// 				if((neighbourangle < Math.PI && 
+		// 					p.angle > Math.PI && 
+		// 					neighbourangle + Math.PI * 2 > p.angle && 
+		// 					neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
+		// 					(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
+		// 				{
+
+
+				if(angle1Diff > 0 || angle2Diff > 0)
 					endpoint.beginsSegment = true;
 
 		    	endpoints.push(endpoint);
@@ -95,47 +123,37 @@ function calculateVisibility(stopat)
 
 		    	var nearestwall = status[0];
 
-				var neighbours = [p.neighbour1, p.neighbour2];
-
 				// Add walls if p is the first endpoint of this wall
-		    	for (var j = 0; j < neighbours.length; j++)
-		    	{
+				if(p.beginsSegment)
+				{
+					var neighbours = [p.neighbour1, p.neighbour2];
 
-		    		var n = neighbours[j];
-					var dir = { 
-						x: n.x - o.x, 
-						y: n.y - o.y
-					};
+			    	for (var j = 0; j < neighbours.length; j++)
+			    	{
+			    		var n = neighbours[j];
+						var exists = false;
 
-					var exists = false;
-
-					// check whether the wall is already in the status structure
-		    		for (var z = status.length - 1; z >= 0; z--) 
-		    		{
-		    			exists = status[z].isendpoint(p.x, p.y);
-		    			if(exists)
-		    				break;
-		    		}
-
-					// Check whether the wall should be added to the status structure (when p is the first endpoint of this wall)
-					var neighbourangle = Math.atan2(dir.y, dir.x) + Math.PI;
-
-					if((neighbourangle < Math.PI && 
-						p.angle > Math.PI && 
-						neighbourangle + Math.PI * 2 > p.angle && 
-						neighbourangle + Math.PI * 2 - p.angle < Math.PI) || 
-						(neighbourangle > p.angle &&  neighbourangle - p.angle < Math.PI))
-					{
-			    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
-			    		if(!exists)
+						// check whether the wall is already in the status structure
+			    		for (var z = status.length - 1; z >= 0; z--) 
 			    		{
-			    			wall.age = 0;			
-						}
-						status.push(wall);
-					}
+			    			exists = status[z].isendpoint(p.x, p.y);
+			    			if(exists)
+			    				break;
+			    		}
 
-		    	};
-				
+						// Check whether the wall should be added to the status structure (when p is the first endpoint of this wall)
+						if(!n.beginsSegment)
+						{
+				    		var wall = new LineSegment(n.x, n.y, p.x, p.y);
+				    		if(!exists)
+				    		{
+				    			wall.age = 0;			
+							}
+							status.push(wall);
+						}
+
+			    	};
+				}
 				// Remove walls with p as second endpoint
 		    	for (var j = status.length - 1; j >= 0; j--) 
 		    	{
@@ -158,7 +176,7 @@ function calculateVisibility(stopat)
 		    		status[j].dist = Math.sqrt(Math.pow(o.x - hit.x, 2) + Math.pow(o.y - hit.y, 2));
 		    	};
 
-		    	// TODO: Create this function in another location since we have to reuse it
+		    	// TODO: implement this using a bst
 		    	status.sort(function(a,b)
 		    	{
 		    		var diff = a.dist - b.dist;

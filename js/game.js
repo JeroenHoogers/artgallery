@@ -43,7 +43,8 @@ var currentMoney = 0;
 
 // Guard parameters
 var detectionTime = 0.6; // seconds
-var cooldownRate = 0.1;
+var cooldownRate = 0.15;
+var playerDetected = false;
 
 var leftSpawn = false;
 var canFinish = false;
@@ -461,20 +462,16 @@ function update()
     var step = parseInt((Date.now() - starttime) / 1000);
     var deltatime = (Date.now() - lastframe) / 1000;
 
-    var playerDetected = false;
     var maxAlertedRatio = 0;
 	// Check whether the player can be seen by any of the guards
 	for (var g = 0; g < level.guards.length; g++) {
 		level.guards[g].alerted = false;
 		if(typeof(level.guards[g].visibility) != "undefined" && level.guards[g].visibility.contains(level.player.position.x, level.player.position.y))
 		{
-			playerDetected = true;
-
 			level.guards[g].alerted = true;
 			level.guards[g].alertedRatio += deltatime / detectionTime;
 			level.guards[g].alertedRatio = Math.min(1.0, level.guards[g].alertedRatio);
 
-			maxAlertedRatio = (maxAlertedRatio < level.guards[g].alertedRatio) ? level.guards[g].alertedRatio : maxAlertedRatio;
 			
 			// Player was detected, game over
 			if(level.guards[g].alertedRatio == 1)
@@ -490,6 +487,8 @@ function update()
 				level.guards[g].alertedRatio = Math.max(0.0, level.guards[g].alertedRatio);
 			}
 		}
+
+		maxAlertedRatio = (maxAlertedRatio < level.guards[g].alertedRatio) ? level.guards[g].alertedRatio : maxAlertedRatio;
 
 		level.guards[g].alertedMeter.visible = (level.guards[g].alertedRatio > 0);
 		//level.guards[g].light.position = level.guards[g].position;
@@ -531,26 +530,34 @@ function update()
 		}
 	};
 
-	if(playerDetected)
+	if(maxAlertedRatio > 0 && playerDetected)
+	{
+		grayFilter.gray = maxAlertedRatio;
+	}
+
+	if(maxAlertedRatio > 0 && !playerDetected)
 	{
 		// Set the gray filter when the player is detected
 		grayFilter.gray = maxAlertedRatio;
 		stage.filters = [grayFilter];
+		playerDetected = true;
+		console.log(maxAlertedRatio);
 	}
-	else
+	else if(maxAlertedRatio <= 0 && playerDetected)
 	{
 		// Remove the filter
 		stage.filters = null;
+		playerDetected = false;
+		console.log('lhkj');
 	}
+
 	playermovement = moveplayer.normalize();
 	var nextPosition = new PIXI.Point(
 		level.player.position.x + (playermovement.x * playerspeed * deltatime), 
 		level.player.position.y + (playermovement.y * playerspeed * deltatime)
 	);
 
-
 	// Use key is down, check whether the player is close to a painting
-
 	stealPaintingHint.visible = false;
 	stealHintSprite.visible = false;
 	for (var i = level.paintings.length - 1; i >= 0; i--) 
@@ -572,7 +579,6 @@ function update()
 					level.paintings.splice(i, 1);
 				}
 			}
-
 		}
 		else
 		{
