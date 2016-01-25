@@ -124,11 +124,14 @@ function keyboard(keyCode)
 
   pkey.press = function() 
   {
-    pause = true;
+
   };
 
   pkey.release = function() 
   {
+    if(menustartactive)
+      return;
+    pause = true;
     if(playerspeed == 0)
       startGameClick();
     else
@@ -136,11 +139,14 @@ function keyboard(keyCode)
   }; 
   esc.press = function() 
   {
-    pause = true;
+
   };
 
   esc.release = function() 
   {
+    if(menustartactive)
+      return;
+    pause = true;
     if(playerspeed == 0)
       startGameClick();
     else

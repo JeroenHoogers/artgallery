@@ -238,6 +238,10 @@ function Import()
 	level.loadJSON(document.getElementById('tb_Export').value);
 	redraw();
 }
+function GoToGame()
+{
+	window.location = "/artgallery";
+}
 
 function mouseEventHandler(event)
 {
