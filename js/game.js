@@ -308,6 +308,7 @@ function loadstage()
 	wallGraphics.drawPolygon(level.start.points);
 	wallGraphics.drawPolygon(level.finish.points);
 	redrawMisc();
+	starttime = Date.now();
 }
 
 

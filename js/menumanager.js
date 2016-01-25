@@ -15,25 +15,27 @@ var menuTitleText = new PIXI.Text("", {font:"35px Goudy Old Style", fill:"white"
 var endGameText = new PIXI.Text("", {font:"25px Goudy Old Style", fill:"white", stroke:"#999999", strokeThickness: 0});
 
 var infoText = [];
-infoText[0] = {header : new PIXI.Text("Game Information", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
-			   innertext : new PIXI.Text("This game is designed and developed by Jeroen Hoogers and Niek van Hulzen \n as project for the course Geometric Algortihms at the TU/e. \n\n In this game a visibility algorithm is implemented to optimize the vision of the guards in the game, \n and is implemented using ....", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
-infoText[1] = {header : new PIXI.Text("Stealing Paintings", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
-			   innertext : new PIXI.MultiStyleText("Paintings are shown as thick lines on the walls in the colors <bronze>bronze</bronze>, <silver>silver</silver> and <gold>gold</gold>. \n These colors represent the value of this painting. \n\n To be able to steal a painting you have to stand near it and press 'e'. \n The color in the painting will show the progress of taking the painting. \n When the color is fully gone, the painting is yours and you can continue to the next painting.", {
+infoText[0] = {header : new PIXI.Text("Algortihm Information", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+			   innertext : new PIXI.Text("This game is designed and developed by Jeroen Hoogers and Niek van Hulzen \nas project for the course Geometric Algortihms at the TU/e. \n\nThe game is built with a focus on the visibility of the guards, which is necessary to show the\narea each guard can see and whether or not the player is inside this area.\nThe visibility algorithm implemented to calculate the vision of the guards in the game uses\na Binary Search Tree to store the status structure, in which the walls are stored to obtain\nthe vision towards each wall, and a sorted list to store the events of the sweepline.\n\nThe algorithm searches for vertices, which lie on every end of a wall, and connects two walls.\nFor each vertex in the game the algorithm checks whether the guard can see it and\nstores those vertices.\nThen for each vertex that can be seen a triangle will be calculated with the previously seen\nvertex and with all triangles combined the total area the guard can see is determined.", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
+infoText[1] = {header : new PIXI.Text("Debug Information", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+			   innertext : new PIXI.Text("We have implemented a 'debug' function which can be started from this page where you are\nable to see exactly what the algorithm does.\nThe walls will be drawn as different colors, which is red for newly found walls, green for walls\nin the status, and blue for the nearest wall.\nEach iteration is when a new wall vertex(either inner or outer) is found, which are sorted\nusing a sweep line 360 degrees around the guard.\nFor every vertex that is seen, a yellow line will be drawn to it and a blue triangle will be drawn\nusing the previously seen vertex.\nEvery vertex that can not be seen by the guard will have a red line to it and is discarded.", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
+infoText[2] = {header : new PIXI.Text("Stealing Paintings", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+			   innertext : new PIXI.MultiStyleText("Paintings are shown as thick lines on the walls in the colors <bronze>bronze</bronze>, <silver>silver</silver> and <gold>gold</gold>. \nThese colors represent the value of this painting. \n\nTo be able to steal a painting you have to stand near it and press 'e'. \nThe color in the painting will show the progress of taking the painting. \nWhen the color is fully gone, the painting is yours and you can continue to the next painting.", {
         		def: {font:"20px Arial", fill:"white"},
         		bronze: { font: "20px Arial", fill: "#CD7F32" },
         		silver: { font: "20px Arial", fill: "#C0C0C0" },
         		gold: { font: "20px Arial", fill: "#FFD700" }})};	
-infoText[2] = {header : new PIXI.Text("Avoid Detection", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
-			   innertext : new PIXI.Text("The guards in this game are able to see in a straight line in every direction. \n Your goal is to avoid that any guard will detect you by standing outside of their view.\n\n The vision of the guards is easily recognisable by the lit floor and \n whenever you are in this area the you have only a fraction of a second to hide \n or else you will be seen and you are game over!", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
-infoText[3] = {header : new PIXI.Text("Target value", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
-			   innertext : new PIXI.MultiStyleText("The colors of the paintings represent the value of that particular painting. \n The values are distributed as followed : \n\n <bronze>Bronze : 500</bronze> \n <silver>Silver : 1000</silver> \n <gold>Gold : 2000</gold> \n\n Your objective is to collect enough paintings to be able to reach the target value \n shown in the upper right corner of every level. \n When this value is reached you will be able to exit through the green exit field \n and continue to the next level.", {	
+infoText[3] = {header : new PIXI.Text("Avoid Detection", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+			   innertext : new PIXI.Text("The guards in this game are able to see in a straight line in every direction. \nYour goal is to avoid that any guard will detect you by standing outside of their view.\n\nThe vision of the guards is easily recognisable by the lit floor and \nwhenever you are in this area the you have only a fraction of a second to hide \nor else you will be seen and you are game over!", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
+infoText[4] = {header : new PIXI.Text("Target value", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+			   innertext : new PIXI.MultiStyleText("The colors of the paintings represent the value of that particular painting. \nThe values are distributed as followed : \n\n<bronze>Bronze : 500</bronze> \n<silver>Silver : 1000</silver> \n<gold>Gold : 2000</gold> \n\nYour objective is to collect enough paintings to be able to reach the target value \nshown in the upper right corner of every level. \nWhen this value is reached you will be able to exit through the green exit field \nand continue to the next level.", {	
         		def: {font:"20px Arial", fill:"white"},
         		bronze: { font: "20px Arial", fill: "#CD7F32" },
         		silver: { font: "20px Arial", fill: "#C0C0C0" },
         		gold: { font: "20px Arial", fill: "#FFD700" }})};	
-infoText[4] = {header : new PIXI.Text("Game Controls", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+infoText[5] = {header : new PIXI.Text("Game Controls", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
 			   innertext : new PIXI.Text("This game uses the arrow keys for the player to walk through the level. \n To steal paintings you have to stand near one and press and hold 'e'.\n \n To pause the game either press 'P' or the escape key.", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
-infoText[5] = {header : new PIXI.Text("Obstacles", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
+infoText[6] = {header : new PIXI.Text("Obstacles", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0}), 
 			   innertext : new PIXI.Text("In the game are multiple forms of obstacles for the player, namely : \n\n              - Block vision. \n              - Block movement from player and guards.\n\n\n              - Does not block vision. \n              - Block movement from player and guards.", {font:"20px Arial", fill:"white", stroke:"#999999", strokeThickness: 0})};	
 
 var currentpage = 0;
@@ -149,7 +151,7 @@ function startGameClick(data){
 }
 
 function infoGameClick(data){	
-	showmenu(4);
+	showmenu(6);
 	menustartactive = false;
 	menuGraphics.clear();	
 	menuGraphics.beginFill(0x000000, 0.7);	
@@ -158,18 +160,54 @@ function infoGameClick(data){
 	menuGraphics.removeChild(buttons[0].btn);
 	menuGraphics.removeChild(buttons[1].btn);
 	menuGraphics.removeChild(buttons[2].btn);
-	menuTitleText.text = infoText[0].header.text;
+	menuTitleText.text = infoText[currentpage].header.text;
 	menuTitleText.position = new PIXI.Point(500, 120);
+	for (var i = 0; i < infoText.length; i++) {
+		menuGraphics.removeChild(infoText[i].innertext);
+	};
 	//infoText.text = "Art Gallery Heist \n By Jeroen Hoogers and Niek van Hulzen \n ABCDEFGHIJKLMNOPQRTSUVWXYZ";
-	infoText[0].innertext.position = new PIXI.Point(225, 180);
-	menuGraphics.addChild(infoText[0].innertext);
-	buttons[3].btnText.text = "Back";		
-	buttons[3].btn.click = menuGameClick;
+	infoText[currentpage].innertext.position = new PIXI.Point(225, 180);
+	menuGraphics.addChild(infoText[currentpage].innertext);
+	buttons[3].btnText.text = "Debug";		
+	buttons[3].btn.click = debugGameClick;
+	buttons[5].btnText.text = "Back to menu";		
+	buttons[5].btn.click = menuGameClick;
+	if(currentpage == 1)
+	{
+		buttons[4].btnText.text = "Previous";	
+		currentpage--;
+	}
+	else if(currentpage == 0)
+	{
+		currentpage++;
+		buttons[4].btnText.text = "Next";	
+	}
+	buttons[4].btn.click = infoGameClick; 
+	menuGraphics.addChild(buttons[4].btn);
 	renderer.render(stage);
+}
+
+function debugGameClick(data){	
+	for (var i = 0; i < infoText.length; i++) {
+		menuGraphics.removeChild(infoText[i].innertext);
+	};
+	menuGraphics.removeChild(buttons[4].btn);
+	menuGraphics.removeChild(buttons[5].btn);
+	stage.removeChild(homemenu);
+	menuOpen = false;
+	pause = false;
+	playerspeed = 200;
+	menustartactive = false;
+	currentStage = 0;
+	debug = true;
+	unloadstage();
+	loadstage();
 }
 
 function howTotGameClick(data){	
 	showmenu(6);
+	if(currentpage < 1)
+		currentpage = 1;
 	currentpage++;
 	menustartactive = false;
 	menuGraphics.clear();	
@@ -200,7 +238,7 @@ function howTotGameClick(data){
 	{
 		menuGraphics.removeChild(buttons[4].btn);
 	}
-	if(currentpage > 1)
+	if(currentpage > 2)
 	{
 		buttons[5].btnText.text = "Previous";	
 		buttons[5].btn.click = previousPageClick;
@@ -294,6 +332,8 @@ function restartLevelClick(data){
 }
 
 function restartGameClick(data){
+	if(debug)
+		debug = false;
 	currentStage = 4;
 	pause = false;
 	unloadstage();
