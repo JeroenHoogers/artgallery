@@ -42,6 +42,7 @@ var useKeydown = false;
 var starttime = null;
 
 var currentMoney = 0;
+var totalValueStolen = 0;
 
 // Guard parameters
 var detectionTime = 0.6; // seconds
@@ -165,6 +166,7 @@ function gameover()
 
 function stagecompleted()
 {
+	totalValueStolen += currentMoney;
 	currentStage++;
 	if(currentStage < levels.length)
 	{
@@ -181,7 +183,7 @@ function stagecompleted()
 
 function gamecompleted()
 {
-	alert("You have completed the game!");
+	showgameovermenu();
 }
 
 function unloadstage()
